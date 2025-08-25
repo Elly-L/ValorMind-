@@ -3,7 +3,7 @@ import { getSystemPrompt, performSafetyCheck } from "../../../lib/ai-personality
 import type { AIMode } from "../../../lib/ai-personality"
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-const BAIDU_API_KEY = "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".trim()
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API || ""
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const apiResponse = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${BAIDU_API_KEY}`,
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "https://v0.app",
         "X-Title": "Gen Z Therapy AI",

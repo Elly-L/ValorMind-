@@ -207,40 +207,42 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
               <p className="text-lg text-gray-600 dark:text-gray-300">You can always change this later in settings.</p>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
-              <button
-                className={`relative w-full md:w-64 p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-                  selectedTheme === "light"
-                    ? "border-pink-500 shadow-lg shadow-pink-200"
-                    : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
-                }`}
-                onClick={() => handleSelectTheme("light")}
-              >
-                <div className="bg-gradient-to-br from-slate-100 via-pink-50 to-purple-100 rounded-xl h-32 flex items-center justify-center mb-4">
-                  <Sun className="w-12 h-12 text-pink-600" />
-                </div>
-                <p className="text-lg font-semibold text-gray-800 dark:text-white">Clean & Bright</p>
-                {selectedTheme === "light" && (
-                  <Check className="absolute top-3 right-3 w-6 h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
-                )}
-              </button>
+            <div className="w-full max-w-2xl overflow-y-auto max-h-[60vh] px-2">
+              <div className="flex flex-col md:flex-row gap-6">
+                <button
+                  className={`relative w-full md:w-64 p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
+                    selectedTheme === "light"
+                      ? "border-pink-500 shadow-lg shadow-pink-200"
+                      : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
+                  }`}
+                  onClick={() => handleSelectTheme("light")}
+                >
+                  <div className="bg-gradient-to-br from-slate-100 via-pink-50 to-purple-100 rounded-xl h-32 flex items-center justify-center mb-4">
+                    <Sun className="w-12 h-12 text-pink-600" />
+                  </div>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-white">Clean & Bright</p>
+                  {selectedTheme === "light" && (
+                    <Check className="absolute top-3 right-3 w-6 h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
+                  )}
+                </button>
 
-              <button
-                className={`relative w-full md:w-64 p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-                  selectedTheme === "dark"
-                    ? "border-pink-500 shadow-lg shadow-pink-200"
-                    : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
-                }`}
-                onClick={() => handleSelectTheme("dark")}
-              >
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl h-32 flex items-center justify-center mb-4">
-                  <Moon className="w-12 h-12 text-purple-400" />
-                </div>
-                <p className="text-lg font-semibold text-gray-800 dark:text-white">Moody & Minimal</p>
-                {selectedTheme === "dark" && (
-                  <Check className="absolute top-3 right-3 w-6 h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
-                )}
-              </button>
+                <button
+                  className={`relative w-full md:w-64 p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
+                    selectedTheme === "dark"
+                      ? "border-pink-500 shadow-lg shadow-pink-200"
+                      : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
+                  }`}
+                  onClick={() => handleSelectTheme("dark")}
+                >
+                  <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl h-32 flex items-center justify-center mb-4">
+                    <Moon className="w-12 h-12 text-purple-400" />
+                  </div>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-white">Moody & Minimal</p>
+                  {selectedTheme === "dark" && (
+                    <Check className="absolute top-3 right-3 w-6 h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button
@@ -264,42 +266,44 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
               <p className="text-lg text-gray-600 dark:text-gray-300">Choose the type of support you're looking for.</p>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
-              <button
-                className={`relative w-full md:w-72 p-8 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-center ${
-                  selectedPersona === "friend"
-                    ? "border-pink-500 shadow-lg shadow-pink-200"
-                    : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
-                }`}
-                onClick={() => setSelectedPersona("friend")}
-              >
-                <Heart className="w-8 h-8 text-pink-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">As a Friend</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                  Casual, supportive, and here to listen.
-                </p>
-                {selectedPersona === "friend" && (
-                  <Check className="absolute top-3 right-3 w-6 h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
-                )}
-              </button>
+            <div className="w-full max-w-2xl overflow-y-auto max-h-[60vh] px-2">
+              <div className="flex flex-col md:flex-row gap-6">
+                <button
+                  className={`relative w-full md:w-72 p-8 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-center ${
+                    selectedPersona === "friend"
+                      ? "border-pink-500 shadow-lg shadow-pink-200"
+                      : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
+                  }`}
+                  onClick={() => setSelectedPersona("friend")}
+                >
+                  <Heart className="w-8 h-8 text-pink-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">As a Friend</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                    Casual, supportive, and here to listen.
+                  </p>
+                  {selectedPersona === "friend" && (
+                    <Check className="absolute top-3 right-3 w-6 h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
+                  )}
+                </button>
 
-              <button
-                className={`relative w-full md:w-72 p-8 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-center ${
-                  selectedPersona === "therapist"
-                    ? "border-pink-500 shadow-lg shadow-pink-200"
-                    : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
-                }`}
-                onClick={() => setSelectedPersona("therapist")}
-              >
-                <BrainCircuit className="w-8 h-8 text-purple-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">As a Therapist</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                  Guided, professional, and focused on your growth.
-                </p>
-                {selectedPersona === "therapist" && (
-                  <Check className="absolute top-3 right-3 w-6 h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
-                )}
-              </button>
+                <button
+                  className={`relative w-full md:w-72 p-8 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-center ${
+                    selectedPersona === "therapist"
+                      ? "border-pink-500 shadow-lg shadow-pink-200"
+                      : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
+                  }`}
+                  onClick={() => setSelectedPersona("therapist")}
+                >
+                  <BrainCircuit className="w-8 h-8 text-purple-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">As a Therapist</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                    Guided, professional, and focused on your growth.
+                  </p>
+                  {selectedPersona === "therapist" && (
+                    <Check className="absolute top-3 right-3 w-6 h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button
@@ -337,7 +341,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
         </div>
       </div>
 
-      <div className="flex items-center justify-center min-h-screen p-6 pt-16">
+      <div className="flex items-center justify-center min-h-screen p-6 pt-16 overflow-y-auto">
         <div
           className={`w-full max-w-4xl transition-all duration-300 ${
             isFadingOut ? "opacity-0 transform translate-y-4" : "opacity-100 transform translate-y-0"
