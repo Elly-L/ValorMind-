@@ -341,7 +341,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
         </div>
       </div>
 
-      <div className="flex items-center justify-center min-h-screen p-6 pt-16 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen p-6 pt-16 overflow-y-auto max-h-screen">
         <div
           className={`w-full max-w-4xl transition-all duration-300 ${
             isFadingOut ? "opacity-0 transform translate-y-4" : "opacity-100 transform translate-y-0"
