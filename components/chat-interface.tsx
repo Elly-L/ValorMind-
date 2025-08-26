@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, Menu, Palette, Paperclip, X, ImageIcon } from "lucide-react"
+import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { performSafetyCheck } from "../lib/ai-personality"
@@ -37,6 +37,8 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   const [selectedGradient, setSelectedGradient] = useState("default")
   const [userMessageBg, setUserMessageBg] = useState("default")
   const [showMenu, setShowMenu] = useState(false)
+  const [showFontMenu, setShowFontMenu] = useState(false)
+  const [selectedFont, setSelectedFont] = useState("default")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [attachments, setAttachments] = useState<File[]>([])
@@ -54,6 +56,15 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   const [showTutorial, setShowTutorial] = useState(false)
   const [hasSeenTutorial, setHasSeenTutorial] = useState(false)
 
+  const fontOptions = {
+    default: { name: "Default", class: "font-sans" },
+    "elegant-script": { name: "Elegant Script", class: "font-elegant-script" },
+    handwritten: { name: "Handwritten", class: "font-handwritten" },
+    calligraphy: { name: "Calligraphy", class: "font-calligraphy" },
+    "modern-script": { name: "Modern Script", class: "font-modern-script" },
+    "classic-serif": { name: "Classic Serif", class: "font-classic-serif" },
+  }
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -65,6 +76,10 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   useEffect(() => {
     loadUserProfile()
     const tutorialSeen = localStorage.getItem("valormind-tutorial-seen")
+    const savedFont = localStorage.getItem("valormind-selected-font")
+    if (savedFont && fontOptions[savedFont as keyof typeof fontOptions]) {
+      setSelectedFont(savedFont)
+    }
 
     if (!tutorialSeen) {
       setShowTutorial(true)
@@ -72,6 +87,16 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
 
     setHasSeenTutorial(!!tutorialSeen)
   }, [mode])
+
+  const handleFontSelect = (fontKey: string) => {
+    setSelectedFont(fontKey)
+    localStorage.setItem("valormind-selected-font", fontKey)
+    setShowFontMenu(false)
+  }
+
+  const getCurrentFontClass = () => {
+    return fontOptions[selectedFont as keyof typeof fontOptions]?.class || "font-sans"
+  }
 
   const loadUserProfile = async () => {
     try {
@@ -498,8 +523,8 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 Back
               </Button>
             </div>
-            <h1 className="text-xl font-semibold text-gray-800">{currentStyle.header}</h1>
-            <div className="relative">
+            <h1 className={`text-xl font-semibold text-gray-800 ${getCurrentFontClass()}`}>{currentStyle.header}</h1>
+            <div className="relative flex items-center gap-2">
               <SmartBackgroundDiscovery
                 messageCount={messages.filter((m) => m.sender === "user").length}
                 onThemeButtonClick={() => setShowMenu(true)}
@@ -508,7 +533,22 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowMenu(!showMenu)}
+                onClick={() => {
+                  setShowFontMenu(!showFontMenu)
+                  setShowMenu(false)
+                }}
+                className="text-gray-700 hover:bg-white/20 relative z-10"
+                data-tutorial="font-button"
+              >
+                <Type className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowMenu(!showMenu)
+                  setShowFontMenu(false)
+                }}
                 className="text-gray-700 hover:bg-white/20 relative z-10"
                 data-tutorial="theme-button"
               >
@@ -516,6 +556,37 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
               </Button>
             </div>
           </div>
+
+          {showFontMenu && (
+            <div className="max-w-2xl mx-auto mt-4 p-4 bg-white/90 backdrop-blur-md rounded-xl border border-white/30 relative">
+              <Button
+                onClick={() => setShowFontMenu(false)}
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 hover:bg-white/20 rounded-full p-1"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+
+              <div className="space-y-2" data-tutorial="font-selector">
+                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                  <Type className="w-4 h-4" />
+                  Font Style
+                </h3>
+                {Object.entries(fontOptions).map(([key, font]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleFontSelect(key)}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-all hover:bg-white/60 ${
+                      selectedFont === key ? "bg-purple-500 text-white" : "bg-white/40 text-gray-800"
+                    } ${font.class}`}
+                  >
+                    {font.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {showMenu && (
             <div className="max-w-2xl mx-auto mt-4 p-4 bg-white/30 backdrop-blur-md rounded-xl border border-white/30 relative">
@@ -626,7 +697,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                       : `${currentStyle.aiBubble} shadow-lg`
                   } ${message.isSafetyResponse ? "border-2 border-red-300 bg-red-50/90" : ""} ${
                     mode === "friend" ? "animate-bounce-in" : "animate-fade-in"
-                  }`}
+                  } ${getCurrentFontClass()}`}
                 >
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="mb-2">
@@ -651,7 +722,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className={`max-w-xs px-4 py-3 rounded-2xl ${currentStyle.aiBubble}`}>
+                <div className={`max-w-xs px-4 py-3 rounded-2xl ${currentStyle.aiBubble} ${getCurrentFontClass()}`}>
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
                     <div
@@ -724,7 +795,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={mode === "friend" ? "What's on your mind?" : "Share what you're feeling..."}
-                className="flex-1 bg-transparent border-none outline-none resize-none px-3 py-2 text-sm placeholder-gray-500"
+                className={`flex-1 bg-transparent border-none outline-none resize-none px-3 py-2 text-sm placeholder-gray-500 ${getCurrentFontClass()}`}
                 rows={1}
                 disabled={isLoading}
               />
