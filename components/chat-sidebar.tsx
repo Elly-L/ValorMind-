@@ -223,7 +223,11 @@ export default function ChatSidebar({
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsCollapsed(!isCollapsed)}
-                  className="hidden lg:flex text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className={`hidden lg:flex text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 ${
+                    hasBackgroundImage
+                      ? "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-white/30"
+                      : "bg-white/60 hover:bg-white/80 backdrop-blur-sm border border-gray-200/50"
+                  } rounded-lg p-2 shadow-sm`}
                 >
                   {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </Button>

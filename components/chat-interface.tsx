@@ -12,6 +12,7 @@ import ChatSidebar from "./chat-sidebar"
 import WelcomeScreen from "./welcome-screen"
 import ImageBackgroundModal from "./image-background-modal"
 import TutorialOverlay from "./tutorial-overlay"
+import SmartBackgroundDiscovery from "./smart-background-discovery"
 import { createClient } from "@/lib/supabase"
 import type { ChatMessage } from "@/lib/supabase"
 
@@ -64,9 +65,11 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   useEffect(() => {
     loadUserProfile()
     const tutorialSeen = localStorage.getItem("valormind-tutorial-seen")
+
     if (!tutorialSeen) {
       setShowTutorial(true)
     }
+
     setHasSeenTutorial(!!tutorialSeen)
   }, [mode])
 
@@ -496,15 +499,22 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
               </Button>
             </div>
             <h1 className="text-xl font-semibold text-gray-800">{currentStyle.header}</h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMenu(!showMenu)}
-              className="text-gray-700 hover:bg-white/20"
-              data-tutorial="theme-button"
-            >
-              <Palette className="w-4 h-4" />
-            </Button>
+            <div className="relative">
+              <SmartBackgroundDiscovery
+                messageCount={messages.filter((m) => m.sender === "user").length}
+                onThemeButtonClick={() => setShowMenu(true)}
+                isThemeMenuOpen={showMenu}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMenu(!showMenu)}
+                className="text-gray-700 hover:bg-white/20 relative z-10"
+                data-tutorial="theme-button"
+              >
+                <Palette className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           {showMenu && (

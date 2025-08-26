@@ -84,6 +84,41 @@ export default function TutorialOverlay({ isVisible, onClose, onComplete }: Tuto
 
   useEffect(() => {
     const currentStepData = tutorialSteps[currentStep]
+
+    // Remove any existing tutorial highlight styles
+    const existingStyle = document.getElementById("tutorial-highlight-style")
+    if (existingStyle) {
+      existingStyle.remove()
+    }
+
+    // Add new highlight style if there's a target element
+    if (currentStepData.targetElement && isVisible) {
+      const style = document.createElement("style")
+      style.id = "tutorial-highlight-style"
+      style.textContent = `
+        ${currentStepData.targetElement} {
+          position: relative !important;
+          z-index: 45 !important;
+          pointer-events: auto !important;
+          box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.3), 0 0 20px rgba(139, 92, 246, 0.5) !important;
+          border-radius: 8px !important;
+          transition: all 0.3s ease !important;
+        }
+      `
+      document.head.appendChild(style)
+    }
+
+    // Cleanup function
+    return () => {
+      const styleToRemove = document.getElementById("tutorial-highlight-style")
+      if (styleToRemove) {
+        styleToRemove.remove()
+      }
+    }
+  }, [currentStep, isVisible])
+
+  useEffect(() => {
+    const currentStepData = tutorialSteps[currentStep]
     if (currentStepData.action && isVisible) {
       const timer = setTimeout(() => {
         currentStepData.action?.()
@@ -91,6 +126,15 @@ export default function TutorialOverlay({ isVisible, onClose, onComplete }: Tuto
       return () => clearTimeout(timer)
     }
   }, [currentStep, isVisible])
+
+  useEffect(() => {
+    if (!isVisible) {
+      const existingStyle = document.getElementById("tutorial-highlight-style")
+      if (existingStyle) {
+        existingStyle.remove()
+      }
+    }
+  }, [isVisible])
 
   const nextStep = () => {
     if (currentStep < tutorialSteps.length - 1) {
@@ -124,20 +168,6 @@ export default function TutorialOverlay({ isVisible, onClose, onComplete }: Tuto
 
   return (
     <>
-      {currentStepData.targetElement && (
-        <div className="fixed inset-0 z-40 pointer-events-none">
-          <style jsx>{`
-            ${currentStepData.targetElement} {
-              position: relative !important;
-              z-index: 45 !important;
-              pointer-events: auto !important;
-              box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.3), 0 0 20px rgba(139, 92, 246, 0.5) !important;
-              border-radius: 8px !important;
-            }
-          `}</style>
-        </div>
-      )}
-
       <div
         className={`fixed z-50 transition-all duration-300 ${isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"} ${
           currentStepData.position === "center"

@@ -141,7 +141,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
 
   const getConversationStarters = () => {
     const starters = {
-      friend: ["What's been on my mind lately?", "Tell me about my day", "How can I improve my mood?"],
+      friend: ["Guess what happened", "Today was wild", "I can't even rn", "So embarrassing…", "Need to vent"],
       therapist: ["I'm feeling overwhelmed", "Help me process my emotions", "I want to work through my anxiety"],
       vent: [
         "I need to get this off my chest",
