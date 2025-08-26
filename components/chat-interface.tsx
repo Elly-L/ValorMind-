@@ -243,6 +243,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
             content: msg.content,
           })),
           mode,
+          userName: userName || "Friend",
         }),
       })
 
@@ -302,8 +303,8 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
 
   const gradientOptions = {
     default: {
-      bg: "bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100",
-      color: "bg-gradient-to-br from-slate-400 to-indigo-400",
+      bg: "bg-gradient-to-br from-magenta-100 via-pink-50 to-fuchsia-100",
+      color: "bg-gradient-to-br from-magenta-400 to-fuchsia-400",
     },
     sunset: {
       bg: "bg-gradient-to-br from-orange-100 via-pink-50 to-purple-100",

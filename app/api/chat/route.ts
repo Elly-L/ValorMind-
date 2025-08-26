@@ -7,7 +7,7 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API || ""
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, mode } = await request.json()
+    const { messages, mode, userName } = await request.json()
 
     const latestUserMessage = messages[messages.length - 1]
     if (latestUserMessage.role !== "user") {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const systemPrompt = getSystemPrompt(mode as AIMode)
+    const systemPrompt = getSystemPrompt(mode as AIMode, userName || "Friend")
 
     const payload = {
       model: "baidu/ernie-4.5-300b-a47b",

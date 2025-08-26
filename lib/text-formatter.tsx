@@ -6,10 +6,6 @@ interface FormattedTextProps {
 export function FormattedText({ text, className = "" }: FormattedTextProps) {
   // Function to parse and format text with markdown-like syntax
   const formatText = (text: string) => {
-    const parts = []
-    const currentIndex = 0
-    const key = 0
-
     // Split by lines first to handle bullet points
     const lines = text.split("\n")
 
@@ -39,41 +35,68 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
     let currentIndex = 0
     let key = 0
 
-    // Handle bold text **text**
-    text.replace(/\*\*(.*?)\*\*/g, (match, content, offset) => {
-      // Add text before the match
-      if (offset > currentIndex) {
-        parts.push(text.slice(currentIndex, offset))
-      }
-      // Add bold text
-      parts.push(
-        <strong key={`bold-${key++}`} className="font-semibold">
-          {content}
-        </strong>,
-      )
-      currentIndex = offset + match.length
-      return match
-    })
+    // Process the text and find all markdown patterns
+    const patterns = []
 
-    // Handle italic text *text*
-    const tempText = parts.length > 0 ? "" : text
-    if (parts.length === 0) {
-      tempText.replace(/(?<!\*)\*(?!\*)([^*]+)\*(?!\*)/g, (match, content, offset) => {
-        if (offset > currentIndex) {
-          parts.push(tempText.slice(currentIndex, offset))
-        }
-        parts.push(
-          <em key={`italic-${key++}`} className="italic">
-            {content}
-          </em>,
-        )
-        currentIndex = offset + match.length
-        return match
+    // Find double asterisk patterns first (bold) **text**
+    let match
+    const boldRegex = /\*\*(.*?)\*\*/g
+    while ((match = boldRegex.exec(text)) !== null) {
+      patterns.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[1],
+        type: "bold",
       })
     }
 
+    // Find single asterisk patterns (italic) *text* but not if they're part of double asterisks
+    const italicRegex = /(?<!\*)\*([^*]+?)\*(?!\*)/g
+    while ((match = italicRegex.exec(text)) !== null) {
+      // Check if this single asterisk is not part of a double asterisk pattern
+      const isPartOfBold = patterns.some(
+        (p) => p.type === "bold" && match.index >= p.start - 1 && match.index <= p.end + 1,
+      )
+      if (!isPartOfBold) {
+        patterns.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          content: match[1],
+          type: "italic",
+        })
+      }
+    }
+
+    // Sort patterns by start position
+    patterns.sort((a, b) => a.start - b.start)
+
+    // Build the formatted text
+    patterns.forEach((pattern) => {
+      // Add text before this pattern
+      if (pattern.start > currentIndex) {
+        parts.push(text.slice(currentIndex, pattern.start))
+      }
+
+      // Add the formatted element
+      if (pattern.type === "bold") {
+        parts.push(
+          <strong key={`bold-${key++}`} className="font-bold">
+            {pattern.content}
+          </strong>,
+        )
+      } else if (pattern.type === "italic") {
+        parts.push(
+          <em key={`italic-${key++}`} className="italic">
+            {pattern.content}
+          </em>,
+        )
+      }
+
+      currentIndex = pattern.end
+    })
+
     // Add remaining text
-    if (currentIndex < text.length && parts.length > 0) {
+    if (currentIndex < text.length) {
       parts.push(text.slice(currentIndex))
     }
 
