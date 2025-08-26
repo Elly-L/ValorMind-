@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, RotateCcw } from "lucide-react"
 import type { AIMode } from "../lib/ai-personality"
+import DynamicTitle from "./dynamic-title"
 
 interface WelcomeScreenProps {
   mode: AIMode
@@ -17,23 +18,44 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
   const [currentFont, setCurrentFont] = useState("")
   const [availableBackgrounds, setAvailableBackgrounds] = useState<string[]>([])
   const [backgroundIndex, setBackgroundIndex] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
 
-  const getAllBackgroundImages = () => [
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  const getMobileBackgroundImages = () => [
+    "/images/tulip-field-mobile.png",
+    "/images/motivational-cartoon-mobile.png",
+    "/images/sunset-landscape-mobile.png",
+    "/images/water-splash-mobile.png",
+    "/images/homer-eyes-mobile.png",
+    "/images/heart-cloud-mobile.png",
+    "/images/finger-heart-mobile.png",
+    "/images/zen-bamboo-vertical.png",
+    "/images/cute-bear-mobile.png",
+  ]
+
+  const getDesktopBackgroundImages = () => [
     "/images/cute-foxes.png",
     "/images/lake-sunset.png",
     "/images/misty-lake.png",
-    "/images/modern-workspace.png",
     "/images/mountain-sunset.webp",
     "/images/ocean-blue.png",
-    "/images/purple-sunset.png",
-    "/images/spa-setup.png",
     "/images/tropical-beach.jpeg",
     "/images/water-droplet.png",
     "/images/zen-bamboo-stones.png",
-    "/images/zen-bamboo.png",
     "/images/zen-daisy.png",
-    "/images/zen-stones.png",
+    "/images/zen-spa-stones.png",
   ]
+
+  const getAllBackgroundImages = () => (isMobile ? getMobileBackgroundImages() : getDesktopBackgroundImages())
 
   useEffect(() => {
     const hour = new Date().getHours()
@@ -45,40 +67,39 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
 
     const fonts = ["font-serif", "font-sans"]
     setCurrentFont(fonts[Math.floor(Math.random() * fonts.length)])
-  }, [userGender])
+  }, [userGender, isMobile]) // Added isMobile dependency
 
   const getBackgroundsByTime = (hour: number, gender?: string) => {
-    const morningBgs = [
-      "/images/water-droplet.png",
-      "/images/misty-lake.png",
-      "/images/zen-bamboo.png",
-      "/images/zen-bamboo-stones.png",
-      "/images/modern-workspace.png",
-      "/images/zen-daisy.png",
-    ]
-    const dayBgs = [
-      "/images/ocean-blue.png",
-      "/images/lake-sunset.png",
-      "/images/tropical-beach.jpeg",
-      "/images/cute-foxes.png",
-      "/images/zen-daisy.png",
-      "/images/modern-workspace.png",
-    ]
-    const eveningBgs = [
-      "/images/mountain-sunset.webp",
-      "/images/purple-sunset.png",
-      "/images/zen-daisy.png",
-      "/images/lake-sunset.png",
-      "/images/spa-setup.png",
-    ]
-    const nightBgs = [
-      "/images/zen-stones.png",
-      "/images/spa-setup.png",
-      "/images/zen-bamboo-stones.png",
-      "/images/zen-daisy.png",
-      "/images/zen-bamboo.png",
-      "/images/purple-sunset.png",
-    ]
+    const morningBgs = isMobile
+      ? ["/images/water-splash-mobile.png", "/images/zen-bamboo-vertical.png", "/images/tulip-field-mobile.png"]
+      : [
+          "/images/water-droplet.png",
+          "/images/misty-lake.png",
+          "/images/zen-bamboo-stones.png",
+          "/images/zen-daisy.png",
+        ]
+
+    const dayBgs = isMobile
+      ? ["/images/sunset-landscape-mobile.png", "/images/heart-cloud-mobile.png", "/images/cute-bear-mobile.png"]
+      : [
+          "/images/ocean-blue.png",
+          "/images/lake-sunset.png",
+          "/images/tropical-beach.jpeg",
+          "/images/cute-foxes.png",
+          "/images/zen-daisy.png",
+        ]
+
+    const eveningBgs = isMobile
+      ? [
+          "/images/sunset-landscape-mobile.png",
+          "/images/motivational-cartoon-mobile.png",
+          "/images/finger-heart-mobile.png",
+        ]
+      : ["/images/mountain-sunset.webp", "/images/zen-daisy.png", "/images/lake-sunset.png"]
+
+    const nightBgs = isMobile
+      ? ["/images/homer-eyes-mobile.png", "/images/zen-bamboo-vertical.png"]
+      : ["/images/zen-bamboo-stones.png", "/images/zen-daisy.png", "/images/zen-spa-stones.png"]
 
     // Time-based selection
     if (hour >= 5 && hour < 11) return morningBgs
@@ -175,11 +196,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 md:px-6">
         {/* Brand */}
         <div className="text-center mb-8 md:mb-12">
-          <h1
-            className={`text-4xl sm:text-6xl md:text-8xl font-bold text-white mb-2 md:mb-4 drop-shadow-2xl ${currentFont}`}
-          >
-            ValorMind AI
-          </h1>
+          <DynamicTitle className="mb-2 md:mb-4" />
           <p className="text-lg sm:text-xl md:text-2xl text-white/90 drop-shadow-lg font-light px-4">
             {getWelcomeMessage()}
           </p>

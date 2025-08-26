@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, ArrowLeft, Menu, Palette, Paperclip, X, ImageIcon } from "lucide-react"
+import { Send, Menu, Palette, Paperclip, X, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { performSafetyCheck } from "../lib/ai-personality"
@@ -437,7 +437,22 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   }
 
   return (
-    <div className="flex h-screen">
+    <div
+      className="flex h-screen"
+      style={
+        selectedBackgroundImage
+          ? {
+              backgroundImage: `url(${selectedBackgroundImage})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              minHeight: "100vh",
+            }
+          : {}
+      }
+    >
+      {selectedBackgroundImage && <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-0" />}
+
       <ChatSidebar
         currentMode={mode}
         currentSessionId={currentSessionId}
@@ -447,12 +462,13 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
         onClose={() => setSidebarOpen(false)}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={setSidebarCollapsed}
+        hasBackgroundImage={!!selectedBackgroundImage}
       />
 
       {/* Main chat area */}
       <div
         className={`flex-1 min-h-screen flex flex-col transition-all duration-300 ${
-          selectedBackgroundImage ? "" : currentStyle.background
+          selectedBackgroundImage ? "relative z-10" : currentStyle.background
         } ${
           sidebarOpen && !window.matchMedia("(min-width: 1024px)").matches
             ? "lg:ml-0"
@@ -460,20 +476,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
               ? "lg:ml-16"
               : "lg:ml-80"
         }`}
-        style={
-          selectedBackgroundImage
-            ? {
-                backgroundImage: `url(${selectedBackgroundImage})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                minHeight: "100vh",
-              }
-            : {}
-        }
       >
-        {selectedBackgroundImage && <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] z-0" />}
-
         <div className="sticky top-0 z-10 bg-white/20 backdrop-blur-md border-b border-white/30 p-4 relative">
           <div className="max-w-2xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -486,12 +489,9 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 <Menu className="w-4 h-4" />
               </Button>
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => router.push("/")}
-                className="flex items-center gap-2 text-gray-700 hover:bg-white/20"
+                className="bg-white/80 hover:bg-white/90 text-gray-800 border border-white/50 shadow-sm px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-md"
               >
-                <ArrowLeft className="w-4 h-4" />
                 Back
               </Button>
             </div>

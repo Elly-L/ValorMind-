@@ -16,6 +16,7 @@ interface ChatSidebarProps {
   isOpen: boolean
   onClose: () => void
   onUpdateSessionTitle?: (sessionId: string, title: string) => void
+  hasBackgroundImage?: boolean
 }
 
 export default function ChatSidebar({
@@ -26,6 +27,7 @@ export default function ChatSidebar({
   isOpen,
   onClose,
   onUpdateSessionTitle,
+  hasBackgroundImage = false,
 }: ChatSidebarProps) {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [loading, setLoading] = useState(true)
@@ -196,12 +198,20 @@ export default function ChatSidebar({
       {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />}
 
       <div
-        className={`fixed top-0 left-0 h-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-r border-gray-200 dark:border-gray-700 z-50 transform transition-all duration-300 ${
+        className={`fixed top-0 left-0 h-full ${
+          hasBackgroundImage
+            ? "bg-white/20 dark:bg-gray-900/20 backdrop-blur-md"
+            : "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md"
+        } border-r border-gray-200 dark:border-gray-700 z-50 transform transition-all duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 lg:static lg:z-auto ${shouldBeExpanded ? "w-80" : "w-16"}`}
       >
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div
+            className={`p-4 border-b ${
+              hasBackgroundImage ? "border-white/30 dark:border-gray-600/30" : "border-gray-200 dark:border-gray-700"
+            }`}
+          >
             <div className="flex items-center justify-between mb-4">
               {shouldBeExpanded && (
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -242,14 +252,18 @@ export default function ChatSidebar({
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
-                    className={`${shouldBeExpanded ? "h-12" : "h-8 w-8"} bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse`}
+                    className={`${shouldBeExpanded ? "h-12" : "h-8 w-8"} ${
+                      hasBackgroundImage ? "bg-white/20 dark:bg-gray-600/20" : "bg-gray-200 dark:bg-gray-700"
+                    } rounded-lg animate-pulse`}
                   />
                 ))}
               </div>
             ) : sessions.length === 0 ? (
               <div className={`text-center py-8 ${shouldBeExpanded ? "" : "hidden"}`}>
-                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                <MessageSquare
+                  className={`w-12 h-12 mx-auto mb-3 ${hasBackgroundImage ? "text-white/60" : "text-gray-400"}`}
+                />
+                <p className={`text-sm ${hasBackgroundImage ? "text-white/80" : "text-gray-500 dark:text-gray-400"}`}>
                   No {currentMode} chats yet. Start a new conversation!
                 </p>
               </div>
@@ -262,8 +276,12 @@ export default function ChatSidebar({
                       shouldBeExpanded ? "p-3" : "p-2"
                     } ${
                       currentSessionId === session.id
-                        ? "bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-700"
-                        : "bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        ? hasBackgroundImage
+                          ? "bg-white/30 border-white/40"
+                          : "bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-700"
+                        : hasBackgroundImage
+                          ? "bg-white/10 border-white/20 hover:bg-white/20"
+                          : "bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                     }`}
                     onClick={() => {
                       if (editingId !== session.id) {
@@ -278,7 +296,9 @@ export default function ChatSidebar({
                         onChange={(e) => setEditTitle(e.target.value)}
                         onKeyDown={(e) => handleKeyPress(e, session.id)}
                         onBlur={() => updateSessionTitle(session.id, editTitle)}
-                        className="text-sm bg-transparent border-none p-0 h-auto focus:ring-0"
+                        className={`text-sm bg-transparent border-none p-0 h-auto focus:ring-0 ${
+                          hasBackgroundImage ? "text-white placeholder-white/60" : ""
+                        }`}
                         autoFocus
                       />
                     ) : (
@@ -286,15 +306,27 @@ export default function ChatSidebar({
                         <div className="flex-1 min-w-0">
                           {shouldBeExpanded ? (
                             <>
-                              <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                              <h3
+                                className={`text-sm font-medium truncate ${
+                                  hasBackgroundImage ? "text-white" : "text-gray-900 dark:text-white"
+                                }`}
+                              >
                                 {session.title}
                               </h3>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              <p
+                                className={`text-xs mt-1 ${
+                                  hasBackgroundImage ? "text-white/70" : "text-gray-500 dark:text-gray-400"
+                                }`}
+                              >
                                 {formatTimestamp(session.updated_at)}
                               </p>
                             </>
                           ) : (
-                            <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                            <div
+                              className={`text-xs truncate ${
+                                hasBackgroundImage ? "text-white/80" : "text-gray-600 dark:text-gray-400"
+                              }`}
+                            >
                               {session.title.length > 15 ? session.title.substring(0, 15) + "..." : session.title}
                             </div>
                           )}
@@ -308,7 +340,11 @@ export default function ChatSidebar({
                                 e.stopPropagation()
                                 startEditing(session)
                               }}
-                              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                              className={`h-6 w-6 p-0 ${
+                                hasBackgroundImage
+                                  ? "text-white/60 hover:text-white"
+                                  : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                              }`}
                             >
                               <Edit3 className="w-3 h-3" />
                             </Button>
@@ -319,7 +355,11 @@ export default function ChatSidebar({
                                 e.stopPropagation()
                                 deleteSession(session.id)
                               }}
-                              className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                              className={`h-6 w-6 p-0 ${
+                                hasBackgroundImage
+                                  ? "text-white/60 hover:text-red-300"
+                                  : "text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                              }`}
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>

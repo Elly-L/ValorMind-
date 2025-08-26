@@ -9,15 +9,24 @@ interface ModeCardProps {
   icon: ReactNode
   isPremium?: boolean
   onClick?: () => void
+  isLoading?: boolean
 }
 
-export function ModeCard({ title, description, icon, isPremium, onClick }: ModeCardProps) {
+export function ModeCard({ title, description, icon, isPremium, onClick, isLoading }: ModeCardProps) {
   return (
     <Card
-      className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
+      className={`relative overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 ${
+        isLoading ? "opacity-75 pointer-events-none" : ""
+      }`}
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-pink-100/50 via-purple-100/50 to-blue-100/50 dark:from-pink-900/20 dark:via-purple-900/20 dark:to-blue-900/20" />
+
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-sm flex items-center justify-center z-10">
+          <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+        </div>
+      )}
 
       <div className="relative p-6">
         {isPremium && (

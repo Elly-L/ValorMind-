@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 
@@ -17,22 +17,44 @@ export default function ImageBackgroundModal({
   onSelectImage,
   currentImage,
 }: ImageBackgroundModalProps) {
-  const backgroundImages = [
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  const mobileBackgroundImages = [
+    { path: "/images/tulip-field-mobile.png", name: "Tulip Field", category: "Nature" },
+    { path: "/images/motivational-cartoon-mobile.png", name: "Motivational Quote", category: "Playful" },
+    { path: "/images/sunset-landscape-mobile.png", name: "Sunset Path", category: "Nature" },
+    { path: "/images/water-splash-mobile.png", name: "Water Splash", category: "Nature" },
+    { path: "/images/homer-eyes-mobile.png", name: "Simple Eyes", category: "Playful" },
+    { path: "/images/heart-cloud-mobile.png", name: "Heart Cloud", category: "Nature" },
+    { path: "/images/finger-heart-mobile.png", name: "Finger Heart", category: "Playful" },
+    { path: "/images/zen-bamboo-vertical.png", name: "Zen Bamboo", category: "Therapeutic" },
+    { path: "/images/cute-bear-mobile.png", name: "Cute Bear", category: "Playful" },
+  ]
+
+  const desktopBackgroundImages = [
     { path: "/images/mountain-sunset.webp", name: "Mountain Sunset", category: "Nature" },
     { path: "/images/water-droplet.png", name: "Water Droplet", category: "Nature" },
     { path: "/images/lake-sunset.png", name: "Lake Sunset", category: "Nature" },
-    { path: "/images/purple-sunset.png", name: "Purple Sunset", category: "Nature" },
-    { path: "/images/zen-stones.png", name: "Zen Stones", category: "Therapeutic" },
     { path: "/images/ocean-blue.png", name: "Ocean Blue", category: "Nature" },
-    { path: "/images/zen-bamboo.png", name: "Zen Bamboo", category: "Therapeutic" },
-    { path: "/images/spa-setup.png", name: "Spa Setup", category: "Therapeutic" },
     { path: "/images/misty-lake.png", name: "Misty Lake", category: "Nature" },
     { path: "/images/zen-bamboo-stones.png", name: "Bamboo Stones", category: "Therapeutic" },
     { path: "/images/cute-foxes.png", name: "Cute Foxes", category: "Playful" },
     { path: "/images/zen-daisy.png", name: "Zen Daisy", category: "Therapeutic" },
-    { path: "/images/modern-workspace.png", name: "Modern Workspace", category: "Professional" },
     { path: "/images/tropical-beach.jpeg", name: "Tropical Beach", category: "Nature" },
+    { path: "/images/zen-spa-stones.png", name: "Zen Spa", category: "Therapeutic" },
   ]
+
+  const backgroundImages = isMobile ? mobileBackgroundImages : desktopBackgroundImages
 
   const categories = ["All", "Nature", "Therapeutic", "Playful", "Professional"]
   const [selectedCategory, setSelectedCategory] = useState("All")
@@ -46,6 +68,18 @@ export default function ImageBackgroundModal({
       onClose()
     }, 300)
   }
+
+  useEffect(() => {
+    const preloadImages = () => {
+      const allImages = [...mobileBackgroundImages, ...desktopBackgroundImages]
+      allImages.forEach((image) => {
+        const img = new Image()
+        img.src = image.path
+      })
+    }
+
+    preloadImages()
+  }, [])
 
   if (!isOpen) return null
 

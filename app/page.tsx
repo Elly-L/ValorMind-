@@ -35,6 +35,7 @@ export default function HomePage() {
   const [userMood, setUserMood] = useState<string>()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [navigatingMode, setNavigatingMode] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -137,34 +138,46 @@ export default function HomePage() {
   }
 
   const handleModeClick = (mode: string) => {
-    switch (mode) {
-      case "friend":
-        router.push("/friend")
-        break
-      case "therapist":
-        router.push("/therapist")
-        break
-      case "avatar":
-        // TODO: Implement avatar therapy
-        console.log("Avatar therapy coming soon")
-        break
-      case "vent":
-        // TODO: Implement vent mode
-        console.log("Vent mode coming soon")
-        break
-      case "journal":
-        // TODO: Implement journal
-        console.log("Journal coming soon")
-        break
-      case "exercises":
-        // TODO: Implement exercises
-        console.log("Exercises coming soon")
-        break
-      case "secrets":
-        // TODO: Implement secrets room
-        console.log("Secrets room coming soon")
-        break
-    }
+    if (navigatingMode) return
+
+    setNavigatingMode(mode)
+
+    // Add a small delay to show loading state
+    setTimeout(() => {
+      switch (mode) {
+        case "friend":
+          router.push("/friend")
+          break
+        case "therapist":
+          router.push("/therapist")
+          break
+        case "avatar":
+          // TODO: Implement avatar therapy
+          console.log("Avatar therapy coming soon")
+          setNavigatingMode(null)
+          break
+        case "vent":
+          // TODO: Implement vent mode
+          console.log("Vent mode coming soon")
+          setNavigatingMode(null)
+          break
+        case "journal":
+          // TODO: Implement journal
+          console.log("Journal coming soon")
+          setNavigatingMode(null)
+          break
+        case "exercises":
+          // TODO: Implement exercises
+          console.log("Exercises coming soon")
+          setNavigatingMode(null)
+          break
+        case "secrets":
+          // TODO: Implement secrets room
+          console.log("Secrets room coming soon")
+          setNavigatingMode(null)
+          break
+      }
+    }, 300)
   }
 
   if (loading) {
@@ -238,13 +251,19 @@ export default function HomePage() {
                 }
                 color="primary"
                 onClick={() => handleModeClick("friend")}
+                isLoading={navigatingMode === "friend"}
               />
               <Button
                 onClick={() => handleModeClick("friend")}
-                className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                disabled={navigatingMode === "friend"}
+                className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 disabled:opacity-50"
                 size="sm"
               >
-                <ArrowRight className="w-4 h-4" />
+                {navigatingMode === "friend" ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
               </Button>
             </div>
 
@@ -259,13 +278,19 @@ export default function HomePage() {
                 }
                 color="secondary"
                 onClick={() => handleModeClick("therapist")}
+                isLoading={navigatingMode === "therapist"}
               />
               <Button
                 onClick={() => handleModeClick("therapist")}
-                className="absolute bottom-4 right-4 bg-teal-500 hover:bg-teal-600 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                disabled={navigatingMode === "therapist"}
+                className="absolute bottom-4 right-4 bg-teal-500 hover:bg-teal-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 disabled:opacity-50"
                 size="sm"
               >
-                <ArrowRight className="w-4 h-4" />
+                {navigatingMode === "therapist" ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
               </Button>
             </div>
 
@@ -281,13 +306,19 @@ export default function HomePage() {
                 color="info"
                 isPremium
                 onClick={() => handleModeClick("avatar")}
+                isLoading={navigatingMode === "avatar"}
               />
               <Button
                 onClick={() => handleModeClick("avatar")}
-                className="absolute bottom-4 right-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                disabled={navigatingMode === "avatar"}
+                className="absolute bottom-4 right-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 disabled:opacity-50"
                 size="sm"
               >
-                <ArrowRight className="w-4 h-4" />
+                {navigatingMode === "avatar" ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
               </Button>
             </div>
 
@@ -302,13 +333,19 @@ export default function HomePage() {
                 }
                 color="accent"
                 onClick={() => handleModeClick("vent")}
+                isLoading={navigatingMode === "vent"}
               />
               <Button
                 onClick={() => handleModeClick("vent")}
-                className="absolute bottom-4 right-4 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                disabled={navigatingMode === "vent"}
+                className="absolute bottom-4 right-4 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 disabled:opacity-50"
                 size="sm"
               >
-                <ArrowRight className="w-4 h-4" />
+                {navigatingMode === "vent" ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
               </Button>
             </div>
 
@@ -323,13 +360,19 @@ export default function HomePage() {
                 }
                 color="info"
                 onClick={() => handleModeClick("journal")}
+                isLoading={navigatingMode === "journal"}
               />
               <Button
                 onClick={() => handleModeClick("journal")}
-                className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                disabled={navigatingMode === "journal"}
+                className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 disabled:opacity-50"
                 size="sm"
               >
-                <ArrowRight className="w-4 h-4" />
+                {navigatingMode === "journal" ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
               </Button>
             </div>
 
@@ -343,13 +386,19 @@ export default function HomePage() {
                   </GradientIcon>
                 }
                 onClick={() => handleModeClick("exercises")}
+                isLoading={navigatingMode === "exercises"}
               />
               <Button
                 onClick={() => handleModeClick("exercises")}
-                className="absolute bottom-4 right-4 bg-teal-500 hover:bg-teal-600 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                disabled={navigatingMode === "exercises"}
+                className="absolute bottom-4 right-4 bg-teal-500 hover:bg-teal-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 disabled:opacity-50"
                 size="sm"
               >
-                <ArrowRight className="w-4 h-4" />
+                {navigatingMode === "exercises" ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
               </Button>
             </div>
 
@@ -363,13 +412,19 @@ export default function HomePage() {
                   </GradientIcon>
                 }
                 onClick={() => handleModeClick("secrets")}
+                isLoading={navigatingMode === "secrets"}
               />
               <Button
                 onClick={() => handleModeClick("secrets")}
-                className="absolute bottom-4 right-4 bg-slate-500 hover:bg-slate-600 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                disabled={navigatingMode === "secrets"}
+                className="absolute bottom-4 right-4 bg-slate-500 hover:bg-slate-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 disabled:opacity-50"
                 size="sm"
               >
-                <ArrowRight className="w-4 h-4" />
+                {navigatingMode === "secrets" ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
               </Button>
             </div>
           </div>
