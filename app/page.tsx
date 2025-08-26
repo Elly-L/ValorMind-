@@ -193,36 +193,19 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-slate-800 dark:to-gray-900 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-16 h-16 bg-blue-200/20 dark:bg-blue-400/10 rounded-full animate-pulse"></div>
-        <div
-          className="absolute top-40 right-20 w-12 h-12 bg-indigo-200/20 dark:bg-indigo-400/10 rounded-full animate-bounce"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-60 left-1/4 w-8 h-8 bg-teal-200/20 dark:bg-teal-400/10 rounded-full animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-        <div
-          className="absolute bottom-40 right-10 w-20 h-20 bg-blue-100/20 dark:bg-blue-500/10 rounded-full animate-bounce"
-          style={{ animationDelay: "0.5s" }}
-        ></div>
-        <div
-          className="absolute bottom-60 left-16 w-14 h-14 bg-indigo-100/20 dark:bg-indigo-500/10 rounded-full animate-pulse"
-          style={{ animationDelay: "1.5s" }}
-        ></div>
-        <div
-          className="absolute top-1/3 right-1/3 w-10 h-10 bg-teal-100/20 dark:bg-teal-500/10 rounded-full animate-bounce"
-          style={{ animationDelay: "3s" }}
-        ></div>
-      </div>
-
       <div className="container mx-auto px-6 py-8 max-w-6xl relative z-10">
         {/* Header */}
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">Hey {userName},</h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300">Ready to check in with yourself?</p>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white/20 shadow-lg">
+                <img src="/images/hero-team.png" alt="ValorMind AI Community" className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-gray-800 dark:text-white">Hey {userName},</h1>
+                <p className="text-lg text-gray-600 dark:text-gray-300">Ready to check in with yourself?</p>
+              </div>
+            </div>
           </div>
           <Button
             variant="ghost"
@@ -249,7 +232,7 @@ export default function HomePage() {
                     <Heart size={24} fill="white" />
                   </GradientIcon>
                 }
-                color="primary"
+                image="/images/friendship.png"
                 onClick={() => handleModeClick("friend")}
                 isLoading={navigatingMode === "friend"}
               />
@@ -276,7 +259,7 @@ export default function HomePage() {
                     <Brain size={24} />
                   </GradientIcon>
                 }
-                color="secondary"
+                image="/images/doctor-brain.png"
                 onClick={() => handleModeClick("therapist")}
                 isLoading={navigatingMode === "therapist"}
               />
@@ -303,7 +286,7 @@ export default function HomePage() {
                     <Video size={24} />
                   </GradientIcon>
                 }
-                color="info"
+                image="/images/video-therapy.png"
                 isPremium
                 onClick={() => handleModeClick("avatar")}
                 isLoading={navigatingMode === "avatar"}
@@ -331,7 +314,7 @@ export default function HomePage() {
                     <Wind size={24} />
                   </GradientIcon>
                 }
-                color="accent"
+                image="/images/joy-expression.png"
                 onClick={() => handleModeClick("vent")}
                 isLoading={navigatingMode === "vent"}
               />
@@ -358,7 +341,7 @@ export default function HomePage() {
                     <BookOpen size={24} />
                   </GradientIcon>
                 }
-                color="info"
+                image="/images/journal.png"
                 onClick={() => handleModeClick("journal")}
                 isLoading={navigatingMode === "journal"}
               />
@@ -385,6 +368,7 @@ export default function HomePage() {
                     <Target size={24} />
                   </GradientIcon>
                 }
+                image="/images/meditation.png"
                 onClick={() => handleModeClick("exercises")}
                 isLoading={navigatingMode === "exercises"}
               />
@@ -411,6 +395,7 @@ export default function HomePage() {
                     <MessageSquare size={24} />
                   </GradientIcon>
                 }
+                image="/images/privacy-secret.png"
                 onClick={() => handleModeClick("secrets")}
                 isLoading={navigatingMode === "secrets"}
               />

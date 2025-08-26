@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { useEffect, useState } from "react"
+import Image from "next/image"
 
 interface QuoteCardProps {
   quote: string
@@ -80,11 +81,28 @@ export function QuoteCard({ quote, author, userMood }: QuoteCardProps) {
   }, [userMood])
 
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-600 border-0 shadow-lg">
-      <div className="absolute inset-0 bg-gradient-to-br from-pink-100/50 via-purple-100/50 to-blue-100/50 dark:from-pink-900/20 dark:via-purple-900/20 dark:to-blue-900/20" />
+    <Card className="relative overflow-hidden border-0 shadow-lg">
+      <div className="absolute inset-0">
+        <Image
+          src="/images/zen-stones-background.png"
+          alt="Zen stones background"
+          fill
+          className="object-cover object-center"
+          priority
+        />
+      </div>
+
+      <div className="absolute inset-0 bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg border border-white/40 dark:border-gray-700/40 rounded-lg" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-purple-100/20 to-blue-100/20 dark:from-gray-900/20 dark:via-purple-900/20 dark:to-blue-900/20" />
+
       <div className="relative p-8 text-center">
-        <blockquote className="text-xl font-medium text-gray-700 dark:text-gray-200 italic mb-4">"{quote}"</blockquote>
-        <cite className="text-gray-500 dark:text-gray-400 text-sm">- {author}</cite>
+        <div className="mb-4">
+          <p className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2 drop-shadow-sm">{greeting}</p>
+        </div>
+        <blockquote className="text-xl font-medium text-gray-800 dark:text-gray-100 italic mb-4 drop-shadow-sm">
+          "{quote}"
+        </blockquote>
+        <cite className="text-gray-600 dark:text-gray-300 text-sm drop-shadow-sm">- {author}</cite>
       </div>
     </Card>
   )
