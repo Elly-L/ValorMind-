@@ -7,39 +7,17 @@ interface DynamicTitleProps {
 }
 
 export default function DynamicTitle({ className = "" }: DynamicTitleProps) {
-  const [currentStyle, setCurrentStyle] = useState(0)
   const [displayedText, setDisplayedText] = useState("")
   const [isTyping, setIsTyping] = useState(true)
   const [showCursor, setShowCursor] = useState(true)
 
-  const titleStyles = [
-    // Style 1: 3D Anaglyph Effect (cyan/red offset)
-    {
-      className: `text-4xl sm:text-6xl md:text-8xl font-black text-white`,
-      fontFamily: "font-sans",
-      style: {
-        textShadow: "-3px -3px 0px #00ffff, 3px 3px 0px #ff0080",
-        filter: "contrast(1.2)",
-      },
+  const titleStyle = {
+    className: `text-4xl sm:text-6xl md:text-8xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 bg-clip-text text-transparent`,
+    fontFamily: "font-sans",
+    style: {
+      filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))",
     },
-    // Style 2: Clean Outlined/Stroke Effect
-    {
-      className: `text-4xl sm:text-6xl md:text-8xl font-black text-white`,
-      fontFamily: "font-sans",
-      style: {
-        WebkitTextStroke: "2px #000000",
-        textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
-      },
-    },
-    // Style 3: Orange to Pink Gradient
-    {
-      className: `text-4xl sm:text-6xl md:text-8xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 bg-clip-text text-transparent`,
-      fontFamily: "font-sans",
-      style: {
-        filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))",
-      },
-    },
-  ]
+  }
 
   const fullText = "ValorMind AI"
 
@@ -58,11 +36,10 @@ export default function DynamicTitle({ className = "" }: DynamicTitleProps) {
           clearInterval(typeInterval)
           setIsTyping(false)
 
-          // Wait 2 seconds before starting next cycle
+          // Wait 3 seconds before restarting the same style
           setTimeout(() => {
-            setCurrentStyle((prev) => (prev + 1) % titleStyles.length)
             typewriterCycle()
-          }, 2000)
+          }, 3000)
         }
       }, 150) // 150ms between each character
     }
@@ -78,8 +55,6 @@ export default function DynamicTitle({ className = "" }: DynamicTitleProps) {
     return () => clearInterval(cursorInterval)
   }, [])
 
-  const currentTitleStyle = titleStyles[currentStyle]
-
   return (
     <>
       <style jsx>{`
@@ -88,14 +63,14 @@ export default function DynamicTitle({ className = "" }: DynamicTitleProps) {
           51%, 100% { opacity: 0; }
         }
       `}</style>
-      <h1 className={`${currentTitleStyle.fontFamily} ${className} relative`}>
-        <span className={currentTitleStyle.className} style={currentTitleStyle.style}>
+      <h1 className={`${titleStyle.fontFamily} ${className} relative`}>
+        <span className={titleStyle.className} style={titleStyle.style}>
           {displayedText}
         </span>
         <span
-          className={`${currentTitleStyle.className} inline-block ml-1`}
+          className={`${titleStyle.className} inline-block ml-1`}
           style={{
-            ...currentTitleStyle.style,
+            ...titleStyle.style,
             opacity: showCursor ? 1 : 0,
             animation: isTyping ? "none" : "blink 1s infinite",
           }}
