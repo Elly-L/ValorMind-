@@ -53,7 +53,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-rose-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">ValorMind AI</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent mb-2">
+            ValorMind AI
+          </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">Welcome back to your safe space</p>
         </div>
 

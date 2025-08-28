@@ -54,7 +54,6 @@ export default function HomePage() {
         return
       }
 
-      // Check if user has a profile
       const { data: profile, error } = await supabase.from("user_profiles").select("*").eq("user_id", user.id).single()
 
       if (error && error.code !== "PGRST116") {
@@ -70,7 +69,6 @@ export default function HomePage() {
         setUserName(profile.name || user.email?.split("@")[0] || "Friend")
         setUserMood(profile.mood || undefined)
 
-        // Apply saved theme
         if (profile.theme === "dark") {
           document.documentElement.classList.add("dark")
         } else {
@@ -97,7 +95,6 @@ export default function HomePage() {
 
       if (!user) return
 
-      // Create or update user profile
       const { data: profile, error } = await supabase
         .from("user_profiles")
         .upsert({
@@ -121,7 +118,6 @@ export default function HomePage() {
       setUserMood(onboardingData.mood)
       setShowOnboarding(false)
 
-      // Apply theme
       if (onboardingData.theme === "dark") {
         document.documentElement.classList.add("dark")
       } else {
@@ -142,7 +138,6 @@ export default function HomePage() {
 
     setNavigatingMode(mode)
 
-    // Add a small delay to show loading state
     setTimeout(() => {
       switch (mode) {
         case "friend":
@@ -152,27 +147,22 @@ export default function HomePage() {
           router.push("/therapist")
           break
         case "avatar":
-          // TODO: Implement avatar therapy
           console.log("Avatar therapy coming soon")
           setNavigatingMode(null)
           break
         case "vent":
-          // TODO: Implement vent mode
           console.log("Vent mode coming soon")
           setNavigatingMode(null)
           break
         case "journal":
-          // TODO: Implement journal
           console.log("Journal coming soon")
           setNavigatingMode(null)
           break
         case "exercises":
-          // TODO: Implement exercises
           console.log("Exercises coming soon")
           setNavigatingMode(null)
           break
         case "secrets":
-          // TODO: Implement secrets room
           console.log("Secrets room coming soon")
           setNavigatingMode(null)
           break
@@ -188,13 +178,11 @@ export default function HomePage() {
     return <OnboardingModal onComplete={handleOnboardingComplete} />
   }
 
-  // Get random quote for the day
   const todayQuote = quotes[Math.floor(Math.random() * quotes.length)]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-slate-800 dark:to-gray-900 relative overflow-hidden">
       <div className="container mx-auto px-6 py-8 max-w-6xl relative z-10">
-        {/* Header */}
         <header className="mb-8 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-4 mb-4">
@@ -218,10 +206,8 @@ export default function HomePage() {
         </header>
 
         <main className="space-y-8">
-          {/* Quote of the Day */}
           <QuoteCard quote={todayQuote.text} author={todayQuote.author} userMood={userMood} />
 
-          {/* Main Mode Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="relative group">
               <ModeCard
@@ -414,7 +400,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Widgets Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <MoodTrackerPreview />
             <ProgressWidget />
