@@ -14,6 +14,7 @@ interface WelcomeScreenProps {
 }
 
 export default function WelcomeScreen({ mode, onStartConversation, userGender, userName }: WelcomeScreenProps) {
+  const [showImages, setShowImages] = useState(false)
   const [currentBackground, setCurrentBackground] = useState("")
   const [currentFont, setCurrentFont] = useState("")
   const [availableBackgrounds, setAvailableBackgrounds] = useState<string[]>([])
@@ -58,16 +59,18 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
   const getAllBackgroundImages = () => (isMobile ? getMobileBackgroundImages() : getDesktopBackgroundImages())
 
   useEffect(() => {
-    const hour = new Date().getHours()
-    const backgrounds = getBackgroundsByTime(hour, userGender)
-    setAvailableBackgrounds(backgrounds)
-    const randomIndex = Math.floor(Math.random() * backgrounds.length)
-    setBackgroundIndex(randomIndex)
-    setCurrentBackground(backgrounds[randomIndex])
+    if (showImages) {
+      const hour = new Date().getHours()
+      const backgrounds = getBackgroundsByTime(hour, userGender)
+      setAvailableBackgrounds(backgrounds)
+      const randomIndex = Math.floor(Math.random() * backgrounds.length)
+      setBackgroundIndex(randomIndex)
+      setCurrentBackground(backgrounds[randomIndex])
+    }
 
     const fonts = ["font-serif", "font-sans"]
     setCurrentFont(fonts[Math.floor(Math.random() * fonts.length)])
-  }, [userGender, isMobile]) // Added isMobile dependency
+  }, [userGender, isMobile, showImages])
 
   const getBackgroundsByTime = (hour: number, gender?: string) => {
     const morningBgs = isMobile
@@ -101,7 +104,6 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
       ? ["/images/homer-eyes-mobile.png", "/images/zen-bamboo-vertical.png"]
       : ["/images/zen-bamboo-stones.png", "/images/zen-daisy.png", "/images/zen-spa-stones.png"]
 
-    // Time-based selection
     if (hour >= 5 && hour < 11) return morningBgs
     if (hour >= 11 && hour < 17) return dayBgs
     if (hour >= 17 && hour < 21) return eveningBgs
@@ -109,12 +111,19 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
   }
 
   const flipBackground = () => {
-    const allImages = getAllBackgroundImages()
-    const nextIndex = (backgroundIndex + 1) % allImages.length
-    setBackgroundIndex(nextIndex)
-    setCurrentBackground(allImages[nextIndex])
-    // Update available backgrounds to include all images for continuous shuffling
-    setAvailableBackgrounds(allImages)
+    if (!showImages) {
+      setShowImages(true)
+      const allImages = getAllBackgroundImages()
+      setAvailableBackgrounds(allImages)
+      setBackgroundIndex(0)
+      setCurrentBackground(allImages[0])
+    } else {
+      const allImages = getAllBackgroundImages()
+      const nextIndex = (backgroundIndex + 1) % allImages.length
+      setBackgroundIndex(nextIndex)
+      setCurrentBackground(allImages[nextIndex])
+      setAvailableBackgrounds(allImages)
+    }
   }
 
   const getWelcomeMessage = () => {
@@ -159,16 +168,21 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
     <div
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
-        backgroundImage: `url(${currentBackground})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        ...(showImages && currentBackground
+          ? {
+              backgroundImage: `url(${currentBackground})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }
+          : {
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }),
         minHeight: "100vh",
         minWidth: "100vw",
       }}
     >
-      {/* Glassmorphism overlay */}
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
 
       <div className="relative z-10 p-4 md:p-6 flex justify-between items-start">
         <Button
@@ -187,14 +201,13 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
           className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30 rounded-full p-2 md:p-3 hover:scale-110 transition-all duration-300"
           variant="ghost"
           size="sm"
-          title="Shuffle background image"
+          title={showImages ? "Shuffle background image" : "Enable background images"}
         >
           <RotateCcw className="h-4 w-4 md:h-5 md:w-5" />
         </Button>
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 md:px-6">
-        {/* Brand */}
         <div className="text-center mb-8 md:mb-12">
           <DynamicTitle className="mb-2 md:mb-4" />
           <p className="text-lg sm:text-xl md:text-2xl text-white/90 drop-shadow-lg font-light px-4">
@@ -216,7 +229,6 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
             />
           </div>
 
-          {/* Dive in button for quick chat access */}
           <div className="flex justify-center mt-4">
             <Button
               onClick={() => onStartConversation("Let's start chatting!")}

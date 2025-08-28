@@ -8,6 +8,7 @@ import { ModeCard } from "@/components/mode-card"
 import { MoodTrackerPreview } from "@/components/mood-tracker-preview"
 import { ProgressWidget } from "@/components/progress-widget"
 import { GradientIcon } from "@/components/gradient-icon"
+import { ComingSoonModal } from "@/components/coming-soon-modal"
 import { Heart, Brain, Video, Wind, BookOpen, Target, MessageSquare, LogOut, ArrowRight } from "lucide-react"
 import { createClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
@@ -36,6 +37,8 @@ export default function HomePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [navigatingMode, setNavigatingMode] = useState<string | null>(null)
+  const [showComingSoon, setShowComingSoon] = useState(false)
+  const [comingSoonFeature, setComingSoonFeature] = useState("")
   const router = useRouter()
   const supabase = createClient()
 
@@ -147,23 +150,28 @@ export default function HomePage() {
           router.push("/therapist")
           break
         case "avatar":
-          console.log("Avatar therapy coming soon")
+          setComingSoonFeature("Avatar Therapy")
+          setShowComingSoon(true)
           setNavigatingMode(null)
           break
         case "vent":
-          console.log("Vent mode coming soon")
+          setComingSoonFeature("Vent Mode")
+          setShowComingSoon(true)
           setNavigatingMode(null)
           break
         case "journal":
-          console.log("Journal coming soon")
+          setComingSoonFeature("Journal")
+          setShowComingSoon(true)
           setNavigatingMode(null)
           break
         case "exercises":
-          console.log("Exercises coming soon")
+          setComingSoonFeature("Exercises")
+          setShowComingSoon(true)
           setNavigatingMode(null)
           break
         case "secrets":
-          console.log("Secrets room coming soon")
+          setComingSoonFeature("Secrets Room")
+          setShowComingSoon(true)
           setNavigatingMode(null)
           break
       }
@@ -182,6 +190,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-slate-800 dark:to-gray-900 relative overflow-hidden">
+      <ComingSoonModal isOpen={showComingSoon} onClose={() => setShowComingSoon(false)} feature={comingSoonFeature} />
+
       <div className="container mx-auto px-6 py-8 max-w-6xl relative z-10">
         <header className="mb-8 flex items-center justify-between">
           <div>
