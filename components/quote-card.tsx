@@ -41,60 +41,18 @@ const motivationalQuotes = [
   },
 ]
 
-const backgroundImages = [
-  {
-    src: "/images/zen-stones-background.png",
-    name: "Zen Stones",
-    textColor: "white" as const,
-  },
-  {
-    src: "/images/backgrounds/stone-pier.png",
-    name: "Stone Pier",
-    textColor: "white" as const,
-  },
-  {
-    src: "/images/backgrounds/african-village.png",
-    name: "African Village",
-    textColor: "black" as const,
-  },
-  {
-    src: "/images/backgrounds/red-poppies.png",
-    name: "Red Poppies",
-    textColor: "black" as const,
-  },
-  {
-    src: "/images/backgrounds/european-street.png",
-    name: "European Street",
-    textColor: "black" as const,
-  },
-  {
-    src: "/images/backgrounds/ocean-deck.png",
-    name: "Ocean Deck",
-    textColor: "black" as const,
-  },
-  {
-    src: "/images/backgrounds/vintage-car.png",
-    name: "Vintage Car",
-    textColor: "black" as const,
-  },
-  {
-    src: "/images/backgrounds/sunset-huts.png",
-    name: "Sunset Huts",
-    textColor: "white" as const,
-  },
-  {
-    src: "/images/backgrounds/village-street.png",
-    name: "Village Street",
-    textColor: "black" as const,
-  },
-]
+const zenStonesBackground = {
+  src: "/images/zen-stones-background.png",
+  name: "Zen Stones",
+  textColor: "white" as const,
+}
 
 function getRandomQuote() {
   return motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]
 }
 
 function getRandomBackground() {
-  return backgroundImages[Math.floor(Math.random() * backgroundImages.length)]
+  return zenStonesBackground
 }
 
 function generateGreeting(mood?: string): string {
@@ -163,12 +121,10 @@ function generateGreeting(mood?: string): string {
 export function QuoteCard({ quote, author, userMood }: QuoteCardProps) {
   const [greeting, setGreeting] = useState("")
   const [showModal, setShowModal] = useState(false)
-  const [currentBackground, setCurrentBackground] = useState(getRandomBackground())
   const [currentQuote, setCurrentQuote] = useState(getRandomQuote())
 
   useEffect(() => {
     setGreeting(generateGreeting(userMood))
-    setCurrentBackground(getRandomBackground())
     if (!quote) {
       setCurrentQuote(getRandomQuote())
     }
@@ -185,38 +141,24 @@ export function QuoteCard({ quote, author, userMood }: QuoteCardProps) {
       >
         <div className="absolute inset-0">
           <Image
-            src={currentBackground.src || "/placeholder.svg"}
-            alt={currentBackground.name}
+            src={zenStonesBackground.src || "/placeholder.svg"}
+            alt={zenStonesBackground.name}
             fill
             className="object-cover object-center"
             priority
           />
         </div>
 
-        <div className="relative p-8 text-center">
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20"></div>
+
+        <div className="relative p-8 text-center z-10">
           <div className="mb-4">
-            <p
-              className={`text-lg font-medium mb-2 drop-shadow-lg ${
-                currentBackground.textColor === "white" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              {greeting}
-            </p>
+            <p className="text-lg font-medium mb-2 text-white drop-shadow-lg">{greeting}</p>
           </div>
-          <blockquote
-            className={`text-xl font-medium italic mb-4 drop-shadow-lg ${
-              currentBackground.textColor === "white" ? "text-white" : "text-gray-900"
-            }`}
-          >
+          <blockquote className="text-xl font-medium italic mb-4 text-white drop-shadow-lg">
             "{displayQuote}"
           </blockquote>
-          <cite
-            className={`text-sm drop-shadow-lg ${
-              currentBackground.textColor === "white" ? "text-gray-200" : "text-gray-700"
-            }`}
-          >
-            - {displayAuthor}
-          </cite>
+          <cite className="text-sm text-gray-200 drop-shadow-lg">- {displayAuthor}</cite>
         </div>
       </Card>
 
