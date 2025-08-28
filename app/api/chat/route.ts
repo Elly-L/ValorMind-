@@ -3,20 +3,19 @@ import { getSystemPrompt, performSafetyCheck } from "../../../lib/ai-personality
 import type { AIMode } from "../../../lib/ai-personality"
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API
+const OPENROUTER_API_KEY =
+  process.env.OPENROUTER_API || process.env.NEXT_PUBLIC_OPENROUTER_API || process.env.OPENROUTER_API_KEY
 
 export async function POST(request: NextRequest) {
   try {
     const { messages, mode, userName } = await request.json()
 
-<<<<<<< HEAD
-=======
-    console.log("[v0] API Key length:", OPENROUTER_API_KEY?.length || 0)
-    console.log("[v0] API Key starts with:", OPENROUTER_API_KEY?.substring(0, 10) || "undefined")
-
->>>>>>> 2e769a5df462154ba48f4ee28ac348fd0289edf1
     if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY.trim() === "") {
       console.error("OpenRouter API key is missing or empty")
+      console.error(
+        "Available env vars:",
+        Object.keys(process.env).filter((key) => key.includes("OPENROUTER")),
+      )
       return NextResponse.json({ error: "OpenRouter API key is not configured" }, { status: 500 })
     }
 

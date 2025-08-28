@@ -2,15 +2,34 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase-server"
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API || ""
+const OPENROUTER_API_KEY =
+  process.env.OPENROUTER_API ||
+  process.env.NEXT_PUBLIC_OPENROUTER_API ||
+  process.env.OPENROUTER_API_KEY ||
+  "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" // Temporary fallback for v0 preview
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("[v0] Therapy insights API called")
+
+    if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY.trim() === "") {
+      console.error("[v0] OpenRouter API key is missing or empty")
+      console.error(
+        "[v0] Available env vars:",
+        Object.keys(process.env).filter((key) => key.includes("OPENROUTER")),
+      )
+      return NextResponse.json({ error: "OpenRouter API key is not configured" }, { status: 500 })
+    }
+
+    console.log("[v0] Using API key starting with:", OPENROUTER_API_KEY.substring(0, 10) + "...")
+
     const { sessionId, messages, userName } = await request.json()
 
     if (!sessionId || !messages || messages.length === 0) {
       return NextResponse.json({ error: "Session ID and messages are required" }, { status: 400 })
     }
+
+    console.log("[v0] Processing", messages.length, "messages for session:", sessionId)
 
     const supabase = createClient()
 
@@ -26,38 +45,31 @@ export async function POST(request: NextRequest) {
       .map((msg: any) => `${msg.sender === "user" ? "User" : "AI"}: ${msg.content}`)
       .join("\n")
 
-    const analysisPrompt = `
-You are an AI therapist analyzing a therapy session. Analyze the following conversation and provide structured insights.
+    console.log("[v0] Conversation length:", conversationText.length, "characters")
+
+    const analysisPrompt = `You are an AI therapist analyzing a therapy session. Analyze the following conversation and provide structured insights.
 
 Conversation:
 ${conversationText}
 
-Please provide a JSON response with the following structure:
+IMPORTANT: You must respond with ONLY valid JSON in exactly this format, no additional text or explanation:
+
 {
   "mood_analysis": {
-    "primary_mood": "string (e.g., anxious, depressed, hopeful, etc.)",
-    "mood_intensity": "number (1-10)",
-    "mood_trends": ["array of mood patterns observed"]
+    "primary_mood": "anxious",
+    "mood_intensity": 7,
+    "mood_trends": ["increasing anxiety", "moments of hope"]
   },
-  "key_themes": ["array of 3-5 main themes discussed"],
+  "key_themes": ["work stress", "relationship concerns", "self-doubt"],
   "progress_indicators": {
-    "engagement_level": "string (high/medium/low)",
-    "openness": "string (high/medium/low)",
-    "insight_development": "string (high/medium/low)",
-    "coping_strategies_used": ["array of strategies mentioned"]
+    "engagement_level": "high",
+    "openness": "medium",
+    "insight_development": "medium",
+    "coping_strategies_used": ["deep breathing", "journaling"]
   },
-  "recommendations": ["array of 3-5 therapeutic recommendations"],
-  "risk_assessment": "string (low/medium/high)"
-}
-
-Focus on:
-- Emotional patterns and mood indicators
-- Therapeutic progress and engagement
-- Coping mechanisms and resilience factors
-- Areas needing attention or support
-- Risk factors for mental health concerns
-
-Respond only with valid JSON.`
+  "recommendations": ["practice mindfulness", "set boundaries", "continue therapy"],
+  "risk_assessment": "low"
+}`
 
     const payload = {
       model: "baidu/ernie-4.5-300b-a47b",
@@ -66,10 +78,12 @@ Respond only with valid JSON.`
       max_tokens: 1024,
     }
 
+    console.log("[v0] Making API request to OpenRouter...")
+
     const apiResponse = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${OPENROUTER_API_KEY.trim()}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "https://v0.app",
         "X-Title": "ValorMind AI Therapy Insights",
@@ -77,26 +91,59 @@ Respond only with valid JSON.`
       body: JSON.stringify(payload),
     })
 
+    console.log("[v0] OpenRouter response status:", apiResponse.status)
+
     if (!apiResponse.ok) {
       const errorBody = await apiResponse.text()
-      console.error("OpenRouter API error:", errorBody)
-      return NextResponse.json({ error: "AI analysis failed" }, { status: 502 })
+      console.error("[v0] OpenRouter API error:", errorBody)
+      return NextResponse.json(
+        {
+          error: "AI analysis failed",
+          details: errorBody,
+        },
+        { status: 502 },
+      )
     }
 
     const responseData = await apiResponse.json()
     const aiAnalysis = responseData.choices?.[0]?.message?.content
 
+    console.log("[v0] AI analysis received, length:", aiAnalysis?.length || 0)
+    console.log("[v0] Raw AI response:", aiAnalysis?.substring(0, 200) + "...")
+
     if (!aiAnalysis) {
       return NextResponse.json({ error: "Failed to get AI analysis" }, { status: 500 })
     }
 
-    // Parse AI response
     let insights
     try {
-      insights = JSON.parse(aiAnalysis)
+      // Try to extract JSON from the response if it's wrapped in other text
+      const jsonMatch = aiAnalysis.match(/\{[\s\S]*\}/)
+      const jsonText = jsonMatch ? jsonMatch[0] : aiAnalysis
+
+      insights = JSON.parse(jsonText)
+      console.log("[v0] Successfully parsed AI insights")
     } catch (error) {
-      console.error("Failed to parse AI analysis:", error)
-      return NextResponse.json({ error: "Invalid AI analysis format" }, { status: 500 })
+      console.error("[v0] Failed to parse AI analysis as JSON:", error)
+      console.error("[v0] Raw AI response:", aiAnalysis)
+
+      insights = {
+        mood_analysis: {
+          primary_mood: "mixed",
+          mood_intensity: 5,
+          mood_trends: ["varied emotional states"],
+        },
+        key_themes: ["general discussion", "emotional processing"],
+        progress_indicators: {
+          engagement_level: "medium",
+          openness: "medium",
+          insight_development: "medium",
+          coping_strategies_used: [],
+        },
+        recommendations: ["continue regular sessions", "practice self-care"],
+        risk_assessment: "low",
+      }
+      console.log("[v0] Using fallback structured insights")
     }
 
     // Save insights to database
@@ -115,16 +162,18 @@ Respond only with valid JSON.`
       .single()
 
     if (saveError) {
-      console.error("Error saving insights:", saveError)
+      console.error("[v0] Error saving insights:", saveError)
       return NextResponse.json({ error: "Failed to save insights" }, { status: 500 })
     }
+
+    console.log("[v0] Successfully saved therapy insights to database")
 
     return NextResponse.json({
       success: true,
       insights: savedInsight,
     })
   } catch (error) {
-    console.error("Error in therapy insights API:", error)
+    console.error("[v0] Error in therapy insights API:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

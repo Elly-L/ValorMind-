@@ -272,7 +272,7 @@ export default function ChatSidebar({
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className={`space-y-2 ${shouldBeExpanded ? "" : "hidden"}`}>
                 {sessions.map((session) => (
                   <div
                     key={session.id}

@@ -119,13 +119,13 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
     setShowWelcome(false)
     await createNewSession()
 
-    // Send the user's prompt as first message
+    // Send the user's prompt as first message after session is created
     setTimeout(() => {
       setInputValue(prompt)
       setTimeout(() => {
         sendMessage(prompt)
       }, 100)
-    }, 500)
+    }, 100) // Reduced timeout since session creation is now awaited
   }
 
   const createNewSession = async () => {
@@ -151,6 +151,8 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
       }
 
       setCurrentSessionId(data.id)
+      console.log("[v0] Session created successfully:", data.id)
+      setFirstMessageSent(false)
     } catch (error) {
       console.error("Error creating session:", error)
     }
@@ -187,21 +189,42 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   }
 
   const saveMessage = async (message: Message) => {
-    if (!currentSessionId) return
+    if (!currentSessionId) {
+      console.error("[v0] Cannot save message - no session ID. Message:", message.content.substring(0, 50))
+      return
+    }
 
     try {
-      await supabase.from("chat_messages").insert({
+      console.log(
+        "[v0] Saving message to session:",
+        currentSessionId,
+        "Sender:",
+        message.sender,
+        "Content:",
+        message.content.substring(0, 50),
+      )
+
+      const { error: insertError } = await supabase.from("chat_messages").insert({
         session_id: currentSessionId,
         content: message.content,
         role: message.sender === "user" ? "user" : "assistant",
         attachments: message.attachments || [],
       })
 
+      if (insertError) {
+        console.error("[v0] Error inserting message:", insertError)
+        return
+      }
+
+      console.log("[v0] Message saved successfully")
+
       if (message.sender === "user" && !firstMessageSent) {
         const title =
           message.content.length > 50 ? message.content.substring(0, 50).trim() + "..." : message.content.trim()
 
-        await supabase
+        console.log("[v0] Updating session title for first message:", title)
+
+        const { error: updateError } = await supabase
           .from("chat_sessions")
           .update({
             title,
@@ -209,13 +232,19 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
           })
           .eq("id", currentSessionId)
 
+        if (updateError) {
+          console.error("[v0] Error updating session title:", updateError)
+        } else {
+          console.log("[v0] Session title updated successfully")
+        }
+
         setFirstMessageSent(true)
       } else {
-        // Update session timestamp
+        // Update session timestamp for all other messages
         await supabase.from("chat_sessions").update({ updated_at: new Date().toISOString() }).eq("id", currentSessionId)
       }
     } catch (error) {
-      console.error("Error saving message:", error)
+      console.error("[v0] Error in saveMessage:", error)
     }
   }
 
@@ -550,7 +579,32 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 Back
               </Button>
             </div>
-            <h1 className={`text-xl font-semibold text-gray-800 ${getCurrentFontClass()}`}>{currentStyle.header}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className={`text-xl font-semibold text-gray-800 ${getCurrentFontClass()}`}>{currentStyle.header}</h1>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
+                  mode === "friend"
+                    ? "bg-blue-100/80 text-blue-700 border-blue-200/60"
+                    : mode === "therapist" || mode === "avatar-therapy"
+                      ? "bg-purple-100/80 text-purple-700 border-purple-200/60"
+                      : mode === "vent"
+                        ? "bg-orange-100/80 text-orange-700 border-orange-200/60"
+                        : mode === "journal"
+                          ? "bg-green-100/80 text-green-700 border-green-200/60"
+                          : "bg-gray-100/80 text-gray-700 border-gray-200/60"
+                }`}
+              >
+                {mode === "friend"
+                  ? "Friend"
+                  : mode === "therapist" || mode === "avatar-therapy"
+                    ? "Therapy"
+                    : mode === "vent"
+                      ? "Vent"
+                      : mode === "journal"
+                        ? "Journal"
+                        : mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </span>
+            </div>
             <div className="relative flex items-center gap-2">
               <SmartBackgroundDiscovery
                 messageCount={messages.filter((m) => m.sender === "user").length}

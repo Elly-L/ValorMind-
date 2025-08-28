@@ -23,12 +23,22 @@ interface TherapyNotesPanelProps {
 
 export default function TherapyNotesPanel({ isOpen, onClose, sessionId, userName, messages }: TherapyNotesPanelProps) {
   const [notes, setNotes] = useState<TherapyNote[]>([])
-  const [newNote, setNewNote] = useState("")
-  const [noteType, setNoteType] = useState<TherapyNote["note_type"]>("observation")
   const [isLoading, setIsLoading] = useState(false)
   const [sessionSummary, setSessionSummary] = useState("")
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false)
   const [aiInsights, setAiInsights] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState<TherapyNote["note_type"]>("observation")
+  const [aiGeneratedContent, setAiGeneratedContent] = useState<{
+    observation: string
+    insight: string
+    goal: string
+    summary: string
+  }>({
+    observation: "",
+    insight: "",
+    goal: "",
+    summary: "",
+  })
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
@@ -37,7 +47,6 @@ export default function TherapyNotesPanel({ isOpen, onClose, sessionId, userName
       console.log("[v0] Loading therapy notes for session:", sessionId)
       loadNotes()
       generateSessionSummary()
-      loadAiInsights()
     }
   }, [isOpen, sessionId])
 
@@ -70,131 +79,6 @@ export default function TherapyNotesPanel({ isOpen, onClose, sessionId, userName
     }
   }
 
-  const loadAiInsights = async () => {
-    if (!sessionId) return
-
-    try {
-      const { data, error } = await supabase
-        .from("therapy_insights")
-        .select("*")
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-
-      if (error) {
-        console.error("[v0] Error loading AI insights:", error)
-        return
-      }
-
-      if (data && data.length > 0) {
-        setAiInsights(data[0])
-      }
-    } catch (error) {
-      console.error("[v0] Error loading AI insights:", error)
-    }
-  }
-
-  const generateAiInsights = async () => {
-    if (!sessionId || messages.length < 2) return
-
-    setIsGeneratingInsights(true)
-    try {
-      const response = await fetch("/api/therapy-insights", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sessionId,
-          messages,
-          userName: userName || "User",
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to generate insights")
-      }
-
-      setAiInsights(data.insights)
-
-      await createNotesFromInsights(data.insights)
-    } catch (error) {
-      console.error("[v0] Error generating AI insights:", error)
-    } finally {
-      setIsGeneratingInsights(false)
-    }
-  }
-
-  const createNotesFromInsights = async (insights: any) => {
-    if (!sessionId || !insights) return
-
-    try {
-      const notesToCreate = []
-
-      // Create observation note
-      if (insights.key_themes && insights.key_themes.length > 0) {
-        const observationContent = `Key themes observed in this session:\n• ${insights.key_themes.join("\n• ")}\n\nMood: ${insights.mood_analysis?.primary_mood || "Not specified"} (intensity: ${insights.mood_analysis?.mood_intensity || "N/A"}/10)`
-        notesToCreate.push({
-          session_id: sessionId,
-          content: observationContent,
-          note_type: "observation" as const,
-        })
-      }
-
-      // Create insight note
-      if (insights.therapeutic_insights && insights.therapeutic_insights.length > 0) {
-        const insightContent = `Therapeutic insights from this session:\n• ${insights.therapeutic_insights.join("\n• ")}`
-        notesToCreate.push({
-          session_id: sessionId,
-          content: insightContent,
-          note_type: "insight" as const,
-        })
-      }
-
-      // Create goal note
-      if (insights.recommended_interventions && insights.recommended_interventions.length > 0) {
-        const goalContent = `Recommended goals and interventions:\n• ${insights.recommended_interventions.join("\n• ")}`
-        notesToCreate.push({
-          session_id: sessionId,
-          content: goalContent,
-          note_type: "goal" as const,
-        })
-      }
-
-      // Create summary note
-      const summaryContent = `Session Summary:
-Engagement Level: ${insights.progress_indicators?.engagement_level || "Not assessed"}
-Risk Assessment: ${insights.risk_assessment || "Not assessed"}
-Primary Concerns: ${insights.key_themes?.slice(0, 3).join(", ") || "None identified"}
-
-Overall Assessment: This session showed ${insights.mood_analysis?.primary_mood || "varied"} mood with ${insights.progress_indicators?.engagement_level || "moderate"} engagement. ${insights.therapeutic_insights?.[0] || "Continue monitoring progress."}`
-
-      notesToCreate.push({
-        session_id: sessionId,
-        content: summaryContent,
-        note_type: "summary" as const,
-      })
-
-      // Save all notes to database
-      for (const noteData of notesToCreate) {
-        const { data: savedNote, error } = await supabase.from("therapy_notes").insert(noteData).select().single()
-
-        if (error) {
-          console.error("[v0] Error saving generated note:", error)
-        } else {
-          console.log("[v0] Generated note saved:", savedNote)
-          setNotes((prev) => [savedNote, ...prev])
-        }
-      }
-
-      console.log("[v0] Successfully created", notesToCreate.length, "notes from AI insights")
-    } catch (error) {
-      console.error("[v0] Error creating notes from insights:", error)
-    }
-  }
-
   const generateSessionSummary = async () => {
     if (!messages.length || !sessionId) {
       console.log("[v0] No messages or session ID for summary generation")
@@ -218,56 +102,256 @@ Overall Assessment: This session showed ${insights.mood_analysis?.primary_mood |
 • AI responses: ${aiMessages.length}
 
 🎯 Key Themes Discussed:
-${userMessages
-  .slice(0, 3)
-  .map((msg, i) => `${i + 1}. ${msg.content.substring(0, 100)}${msg.content.length > 100 ? "..." : ""}`)
-  .join("\n")}
+${
+  userMessages.length > 0
+    ? userMessages
+        .slice(0, 3)
+        .map((msg, i) => `${i + 1}. ${msg.content.substring(0, 100)}${msg.content.length > 100 ? "..." : ""}`)
+        .join("\n")
+    : "No themes discussed yet"
+}
 
 💡 Therapeutic Insights:
-• User appears to be seeking support and guidance
-• Conversation shows engagement with therapeutic process
-• Opportunity for continued exploration of themes`
+Click "Generate" below to analyze this session with AI`
 
     setSessionSummary(summary)
     console.log("[v0] Generated session summary")
   }
 
-  const saveNote = async () => {
-    if (!newNote.trim() || !sessionId) {
-      console.log("[v0] Cannot save note - missing content or session ID")
-      return
-    }
+  const generateAiInsights = async () => {
+    if (!sessionId || messages.length < 2) return
 
-    console.log("[v0] Saving note:", { sessionId, noteType, content: newNote.trim() })
-    setIsLoading(true)
+    setIsGeneratingInsights(true)
     setError(null)
-
     try {
-      const { data, error } = await supabase
-        .from("therapy_notes")
-        .insert({
-          session_id: sessionId,
-          content: newNote.trim(),
-          note_type: noteType,
-        })
-        .select()
-        .single()
+      console.log("[v0] Generating AI insights for session:", sessionId)
+      const response = await fetch("/api/therapy-insights", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionId,
+          messages,
+          userName: userName || "User",
+        }),
+      })
 
-      if (error) {
-        console.error("[v0] Error saving note:", error)
-        setError(`Failed to save note: ${error.message}`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error("[v0] Error generating AI insights:", data.error)
+        setError(`Failed to generate insights: ${data.error}`)
         return
       }
 
-      console.log("[v0] Note saved successfully:", data)
-      setNotes((prev) => [data, ...prev])
-      setNewNote("")
+      console.log("[v0] AI insights generated successfully")
+      setAiInsights(data.insights)
+
+      await populateTabsWithAiContent(data.insights)
+    } catch (error) {
+      console.error("[v0] Error generating AI insights:", error)
+      setError("Failed to generate insights. Please try again.")
+    } finally {
+      setIsGeneratingInsights(false)
+    }
+  }
+
+  const populateTabsWithAiContent = async (insights: any) => {
+    if (!sessionId || !insights) return
+
+    try {
+      const observationContent = `Key themes observed in this session:
+${insights.key_themes?.map((theme: string, i: number) => `${i + 1}. ${theme}`).join("\n") || "No specific themes identified"}
+
+Mood Analysis:
+• Primary mood: ${insights.mood_analysis?.primary_mood || "Not specified"}
+• Intensity: ${insights.mood_analysis?.mood_intensity || "N/A"}/10
+• Mood trends: ${insights.mood_analysis?.mood_trends?.join(", ") || "Not assessed"}
+
+Engagement Assessment:
+• Engagement level: ${insights.progress_indicators?.engagement_level || "Not assessed"}
+• Openness to therapy: ${insights.progress_indicators?.openness || "Not assessed"}`
+
+      const insightContent = `Therapeutic insights and clinical observations:
+
+Key Clinical Insights:
+${insights.recommendations?.map((rec: string, i: number) => `${i + 1}. ${rec}`).join("\n") || "No specific recommendations generated"}
+
+Progress Indicators:
+• Openness to therapeutic process: ${insights.progress_indicators?.openness || "Not assessed"}
+• Insight development: ${insights.progress_indicators?.insight_development || "Not assessed"}
+• Current coping strategies: ${insights.progress_indicators?.coping_strategies_used?.join(", ") || "None identified"}
+
+Clinical Assessment:
+The client demonstrated ${insights.progress_indicators?.engagement_level || "moderate"} engagement with therapeutic interventions. Risk assessment indicates ${insights.risk_assessment || "standard"} level monitoring required.`
+
+      const goalContent = `Therapeutic goals and action plan:
+
+Current Coping Strategies Observed:
+${
+  insights.progress_indicators?.coping_strategies_used?.length > 0
+    ? insights.progress_indicators.coping_strategies_used
+        .map((strategy: string, i: number) => `${i + 1}. ${strategy}`)
+        .join("\n")
+    : "• No specific coping strategies identified in this session"
+}
+
+Recommended Focus Areas:
+${
+  insights.recommendations
+    ?.slice(0, 3)
+    .map((rec: string, i: number) => `${i + 1}. ${rec}`)
+    .join("\n") || "• Continue current therapeutic approach"
+}
+
+Next Session Goals:
+• Build on identified strengths and coping mechanisms
+• Address primary mood concerns (${insights.mood_analysis?.primary_mood || "general emotional wellness"})
+• Monitor progress on therapeutic recommendations
+• Assess effectiveness of suggested interventions`
+
+      const summaryContent = `Session Summary:
+Primary Mood: ${insights.mood_analysis?.primary_mood || "Not specified"} (${insights.mood_analysis?.mood_intensity || "N/A"}/10)
+Risk Assessment: ${insights.risk_assessment || "Not assessed"}
+Engagement Level: ${insights.progress_indicators?.engagement_level || "Not assessed"}
+
+Key Themes Discussed:
+• ${insights.key_themes?.join("\n• ") || "No specific themes identified"}
+
+Overall Assessment: This session revealed ${insights.mood_analysis?.primary_mood || "varied"} mood patterns with ${insights.progress_indicators?.engagement_level || "moderate"} engagement. The client demonstrated ${insights.progress_indicators?.openness || "moderate"} openness to therapeutic process. Risk level assessed as ${insights.risk_assessment || "not determined"}.
+
+Next Steps: ${insights.recommendations?.[0] || "Continue monitoring progress and therapeutic engagement."}`
+
+      setAiGeneratedContent({
+        observation: observationContent,
+        insight: insightContent,
+        goal: goalContent,
+        summary: summaryContent,
+      })
+
+      await createNotesFromInsights(insights)
+
+      console.log("[v0] Successfully populated tabs with AI-generated content")
       setError(null)
     } catch (error) {
-      console.error("[v0] Error saving note:", error)
-      setError("Failed to save note")
-    } finally {
-      setIsLoading(false)
+      console.error("[v0] Error populating tabs with AI content:", error)
+      setError("Failed to generate tab content")
+    }
+  }
+
+  const createNotesFromInsights = async (insights: any) => {
+    if (!sessionId || !insights) return
+
+    try {
+      const notesToCreate = []
+
+      if (insights.key_themes && insights.key_themes.length > 0) {
+        const observationContent = `Key themes observed in this session:
+${insights.key_themes.map((theme: string, i: number) => `${i + 1}. ${theme}`).join("\n")}
+
+Mood Analysis:
+• Primary mood: ${insights.mood_analysis?.primary_mood || "Not specified"}
+• Intensity: ${insights.mood_analysis?.mood_intensity || "N/A"}/10
+• Mood trends: ${insights.mood_analysis?.mood_trends?.join(", ") || "Not assessed"}
+
+Engagement Assessment:
+• Engagement level: ${insights.progress_indicators?.engagement_level || "Not assessed"}
+• Openness to therapy: ${insights.progress_indicators?.openness || "Not assessed"}`
+
+        notesToCreate.push({
+          session_id: sessionId,
+          content: observationContent,
+          note_type: "observation" as const,
+        })
+      }
+
+      if (insights.recommendations && insights.recommendations.length > 0) {
+        const insightContent = `Therapeutic insights and clinical observations:
+
+Key Insights:
+${insights.recommendations.map((rec: string, i: number) => `${i + 1}. ${rec}`).join("\n")}
+
+Progress Indicators:
+• Openness to therapeutic process: ${insights.progress_indicators?.openness || "Not assessed"}
+• Insight development: ${insights.progress_indicators?.insight_development || "Not assessed"}
+• Current coping strategies: ${insights.progress_indicators?.coping_strategies_used?.join(", ") || "None identified"}
+
+Clinical Notes:
+The client demonstrated ${insights.progress_indicators?.engagement_level || "moderate"} engagement with therapeutic interventions. Risk assessment indicates ${insights.risk_assessment || "standard"} level monitoring required.`
+
+        notesToCreate.push({
+          session_id: sessionId,
+          content: insightContent,
+          note_type: "insight" as const,
+        })
+      }
+
+      const goalContent = `Therapeutic goals and action plan:
+
+Current Coping Strategies Observed:
+${
+  insights.progress_indicators?.coping_strategies_used?.length > 0
+    ? insights.progress_indicators.coping_strategies_used
+        .map((strategy: string, i: number) => `${i + 1}. ${strategy}`)
+        .join("\n")
+    : "• No specific coping strategies identified in this session"
+}
+
+Recommended Focus Areas:
+${
+  insights.recommendations
+    ?.slice(0, 3)
+    .map((rec: string, i: number) => `${i + 1}. ${rec}`)
+    .join("\n") || "• Continue current therapeutic approach"
+}
+
+Next Session Goals:
+• Build on identified strengths and coping mechanisms
+• Address primary mood concerns (${insights.mood_analysis?.primary_mood || "general emotional wellness"})
+• Monitor progress on therapeutic recommendations
+• Assess effectiveness of suggested interventions`
+
+      notesToCreate.push({
+        session_id: sessionId,
+        content: goalContent,
+        note_type: "goal" as const,
+      })
+
+      const summaryContent = `Session Summary:
+Primary Mood: ${insights.mood_analysis?.primary_mood || "Not specified"} (${insights.mood_analysis?.mood_intensity || "N/A"}/10)
+Risk Assessment: ${insights.risk_assessment || "Not assessed"}
+Engagement Level: ${insights.progress_indicators?.engagement_level || "Not assessed"}
+
+Key Themes Discussed:
+• ${insights.key_themes?.join("\n• ") || "No specific themes identified"}
+
+Overall Assessment: This session revealed ${insights.mood_analysis?.primary_mood || "varied"} mood patterns with ${insights.progress_indicators?.engagement_level || "moderate"} engagement. The client demonstrated ${insights.progress_indicators?.openness || "moderate"} openness to therapeutic process. Risk level assessed as ${insights.risk_assessment || "not determined"}.
+
+Next Steps: ${insights.recommendations?.[0] || "Continue monitoring progress and therapeutic engagement."}`
+
+      notesToCreate.push({
+        session_id: sessionId,
+        content: summaryContent,
+        note_type: "summary" as const,
+      })
+
+      for (const noteData of notesToCreate) {
+        const { data: savedNote, error } = await supabase.from("therapy_notes").insert(noteData).select().single()
+
+        if (error) {
+          console.error("[v0] Error saving generated note:", error)
+        } else {
+          console.log("[v0] Generated note saved:", savedNote)
+          setNotes((prev) => [savedNote, ...prev])
+        }
+      }
+
+      console.log("[v0] Successfully created", notesToCreate.length, "notes from AI insights")
+      setError(null)
+    } catch (error) {
+      console.error("[v0] Error creating notes from insights:", error)
+      setError("Failed to create notes from insights")
     }
   }
 
@@ -304,17 +388,19 @@ ${userMessages
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 w-full max-w-7xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200/50 flex-shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200/50 flex-shrink-0 sticky top-0 bg-white/95 backdrop-blur-md z-10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-              <FileText className="w-5 h-5 text-white" />
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-800">Therapy Session Notes</h2>
-              <p className="text-sm text-gray-600">Session insights and observations for {userName || "User"}</p>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Therapy Session Notes</h2>
+              <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">
+                Session insights and observations for {userName || "User"}
+              </p>
             </div>
           </div>
           <Button
@@ -328,31 +414,33 @@ ${userMessages
         </div>
 
         {error && (
-          <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
+          <div className="mx-4 sm:mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
         )}
 
-        <div className="flex flex-1 min-h-0">
-          {/* Session Summary - Fixed width, scrollable */}
-          <div className="w-1/4 border-r border-gray-200/50 bg-gradient-to-b from-blue-50/50 to-purple-50/50 flex flex-col">
-            <div className="p-6 flex-shrink-0">
-              <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-500" />
+        <div className="flex flex-col lg:flex-row">
+          {/* Session Summary - Full width on mobile, fixed width on desktop */}
+          <div className="w-full lg:w-1/3 xl:w-1/4 border-b lg:border-b-0 lg:border-r border-gray-200/50 bg-gradient-to-b from-blue-50/50 to-purple-50/50 flex flex-col">
+            <div className="p-4 sm:p-6 flex-shrink-0">
+              <h3 className="text-base sm:text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                 Session Summary
               </h3>
             </div>
 
-            <div className="flex-1 px-6 pb-6 overflow-y-auto">
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/50 mb-4">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
+            <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/50 mb-4">
+                <pre className="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
                   {sessionSummary}
                 </pre>
               </div>
 
               {/* AI Insights Section */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200/50">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-3 sm:p-4 border border-purple-200/50">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium text-purple-800 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
+                  <h4 className="text-xs sm:text-sm font-medium text-purple-800 flex items-center gap-2">
+                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
                     AI Insights
                   </h4>
                   {!aiInsights && messages.length >= 2 && (
@@ -420,73 +508,84 @@ ${userMessages
             </div>
           </div>
 
-          {/* Notes Section - Flexible width, scrollable */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Add New Note - Fixed header */}
-            <div className="p-6 border-b border-gray-200/50 bg-white/30 flex-shrink-0">
-              <h3 className="text-lg font-medium text-gray-800 mb-4">Add Therapy Note</h3>
+          {/* Notes Section - Flexible width with natural content flow */}
+          <div className="flex-1">
+            <div className="p-4 sm:p-6 border-b border-gray-200/50 bg-white/30">
+              <h3 className="text-base sm:text-lg font-medium text-gray-800 mb-4">Add Therapy Note</h3>
               <div className="space-y-4">
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-1 sm:gap-2 flex-wrap">
                   {(["observation", "insight", "goal", "summary"] as const).map((type) => (
                     <button
                       key={type}
-                      onClick={() => setNoteType(type)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                        noteType === type
+                      onClick={() => setActiveTab(type)}
+                      className={`px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1 sm:gap-2 ${
+                        activeTab === type
                           ? "bg-purple-500 text-white shadow-lg"
                           : "bg-white/60 text-gray-700 hover:bg-white/80"
                       }`}
                     >
                       {getNoteIcon(type)}
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                      <span className="hidden sm:inline">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                      <span className="sm:hidden">{type.charAt(0).toUpperCase()}</span>
                     </button>
                   ))}
                 </div>
-                <textarea
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder={`Add a ${noteType} note about this session...`}
-                  className="w-full h-24 p-3 bg-white/60 backdrop-blur-sm border border-white/50 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
-                />
-                <Button
-                  onClick={saveNote}
-                  disabled={!newNote.trim() || isLoading}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? "Saving..." : "Save Note"}
-                </Button>
+
+                <div className="bg-white/60 backdrop-blur-sm border border-white/50 rounded-xl p-3 sm:p-4 h-[150px] sm:h-[200px] overflow-y-auto">
+                  {aiGeneratedContent[activeTab] ? (
+                    <pre className="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
+                      {aiGeneratedContent[activeTab]}
+                    </pre>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Brain className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-xs sm:text-sm">AI-generated {activeTab} will appear here</p>
+                      <p className="text-xs">Click "Generate" in the AI Insights section to analyze this session</p>
+                    </div>
+                  )}
+                </div>
+
+                {aiGeneratedContent[activeTab] && (
+                  <div className="flex-shrink-0">
+                    <Button
+                      onClick={() => {
+                        console.log("[v0] AI-generated content already saved to database")
+                      }}
+                      disabled={true}
+                      className="w-full sm:w-auto bg-green-500 text-white cursor-default"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Saved to Records
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Session Notes ({notes.length})</h3>
-                <div className="space-y-3">
-                  {notes.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>No notes yet for this session</p>
-                      <p className="text-sm">Add your first observation or insight above</p>
-                    </div>
-                  ) : (
-                    notes.map((note) => (
-                      <div
-                        key={note.id}
-                        className={`p-4 rounded-xl border-2 ${getNoteColor(note.note_type)} backdrop-blur-sm`}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          {getNoteIcon(note.note_type)}
-                          <span className="font-medium text-sm uppercase tracking-wide">{note.note_type}</span>
-                          <span className="text-xs opacity-70 ml-auto">
-                            {new Date(note.created_at).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="text-sm leading-relaxed">{note.content}</p>
+            <div className="p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-800 mb-4">Session Notes ({notes.length})</h3>
+              <div className="space-y-3 pb-6">
+                {notes.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm sm:text-base">No notes yet for this session</p>
+                    <p className="text-xs sm:text-sm">Add your first observation or insight above</p>
+                  </div>
+                ) : (
+                  notes.map((note) => (
+                    <div
+                      key={note.id}
+                      className={`p-3 sm:p-4 rounded-xl border-2 ${getNoteColor(note.note_type)} backdrop-blur-sm`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        {getNoteIcon(note.note_type)}
+                        <span className="font-medium text-xs sm:text-sm uppercase tracking-wide">{note.note_type}</span>
+                        <span className="text-xs opacity-70 ml-auto">{new Date(note.created_at).toLocaleString()}</span>
                       </div>
-                    ))
-                  )}
-                </div>
+                      <p className="text-xs sm:text-sm leading-relaxed">{note.content}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
