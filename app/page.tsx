@@ -9,7 +9,7 @@ import { MoodTrackerPreview } from "@/components/mood-tracker-preview"
 import { ProgressWidget } from "@/components/progress-widget"
 import { GradientIcon } from "@/components/gradient-icon"
 import { ComingSoonModal } from "@/components/coming-soon-modal"
-import { Heart, Brain, Video, Wind, BookOpen, Target, MessageSquare, LogOut, ArrowRight } from "lucide-react"
+import { Heart, Brain, Video, Wind, BookOpen, Target, MessageSquare, LogOut, ArrowRight, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import LoadingSpinner from "@/components/loading-spinner"
@@ -149,6 +149,9 @@ export default function HomePage() {
         case "therapist":
           router.push("/therapist")
           break
+        case "records":
+          router.push("/records")
+          break
         case "avatar":
           setComingSoonFeature("Avatar Therapy")
           setShowComingSoon(true)
@@ -266,6 +269,33 @@ export default function HomePage() {
                 size="sm"
               >
                 {navigatingMode === "therapist" ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+
+            <div className="relative group">
+              <ModeCard
+                title="Therapy Records"
+                description="View your progress and session history."
+                icon={
+                  <GradientIcon gradient="bg-gradient-to-br from-purple-400 to-indigo-600">
+                    <FileText size={24} />
+                  </GradientIcon>
+                }
+                image="/images/medical-records.png"
+                onClick={() => handleModeClick("records")}
+                isLoading={navigatingMode === "records"}
+              />
+              <Button
+                onClick={() => handleModeClick("records")}
+                disabled={navigatingMode === "records"}
+                className="absolute bottom-4 right-4 bg-purple-500 hover:bg-purple-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 disabled:opacity-50"
+                size="sm"
+              >
+                {navigatingMode === "records" ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <ArrowRight className="w-4 h-4" />

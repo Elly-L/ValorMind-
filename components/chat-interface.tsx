@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type } from "lucide-react"
+import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { performSafetyCheck } from "../lib/ai-personality"
@@ -13,6 +13,7 @@ import WelcomeScreen from "./welcome-screen"
 import ImageBackgroundModal from "./image-background-modal"
 import TutorialOverlay from "./tutorial-overlay"
 import SmartBackgroundDiscovery from "./smart-background-discovery"
+import TherapyNotesPanel from "./therapy-notes-panel"
 import { createClient } from "@/lib/supabase"
 import type { ChatMessage } from "@/lib/supabase"
 
@@ -48,6 +49,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   const [userProfile, setUserProfile] = useState<{ gender?: string } | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
   const [selectedBackgroundImage, setSelectedBackgroundImage] = useState<string | null>(null)
+  const [showTherapyNotes, setShowTherapyNotes] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -291,6 +293,31 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
 
       setMessages((prev) => [...prev, aiMessage])
       await saveMessage(aiMessage)
+
+      if (
+        (mode === "therapist" || mode === "avatar-therapy") &&
+        currentSessionId &&
+        [...messages, userMessage, aiMessage].filter((m) => m.sender === "user").length >= 3
+      ) {
+        // Generate insights in background after session has enough content
+        setTimeout(async () => {
+          try {
+            await fetch("/api/therapy-insights", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                sessionId: currentSessionId,
+                messages: [...messages, userMessage, aiMessage],
+                userName: userName || "User",
+              }),
+            })
+          } catch (error) {
+            console.error("Background insight generation failed:", error)
+          }
+        }, 2000)
+      }
     } catch (error) {
       console.error("Error sending message:", error)
       const errorMessage: Message = {
@@ -530,6 +557,17 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 onThemeButtonClick={() => setShowMenu(true)}
                 isThemeMenuOpen={showMenu}
               />
+              {(mode === "therapist" || mode === "avatar-therapy") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTherapyNotes(true)}
+                  className="text-gray-700 hover:bg-white/20 relative z-10"
+                  title="Therapy Notes"
+                >
+                  <FileText className="w-4 h-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -570,7 +608,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
 
               <div className="space-y-2" data-tutorial="font-selector">
                 <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <Type className="w-4 h-4" />
+                  <Type className="w-4 h-4 mr-2" />
                   Font Style
                 </h3>
                 {Object.entries(fontOptions).map(([key, font]) => (
@@ -820,6 +858,13 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
       />
 
       <TutorialOverlay isVisible={showTutorial} onClose={handleTutorialClose} onComplete={handleTutorialComplete} />
+      <TherapyNotesPanel
+        isOpen={showTherapyNotes}
+        onClose={() => setShowTherapyNotes(false)}
+        sessionId={currentSessionId}
+        userName={userName}
+        messages={messages}
+      />
     </div>
   )
 }
