@@ -201,131 +201,123 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
 
       case "theme":
         return (
-          <div className="flex flex-col h-full">
-            <div className="flex-shrink-0 text-center mb-6">
+          <div className="flex flex-col items-center justify-center text-center space-y-6">
+            <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">Choose your vibe.</h2>
               <p className="text-lg text-gray-600 dark:text-gray-300">You can always change this later in settings.</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4">
-              <div className="w-full max-w-2xl mx-auto px-2">
-                <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center">
-                  <button
-                    className={`relative w-full md:w-64 p-3 md:p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-                      selectedTheme === "light"
-                        ? "border-pink-500 shadow-lg shadow-pink-200"
-                        : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
-                    }`}
-                    onClick={() => handleSelectTheme("light")}
-                  >
-                    <div className="bg-gradient-to-br from-slate-100 via-pink-50 to-purple-100 rounded-xl h-18 md:h-32 flex items-center justify-center mb-2 md:mb-4">
-                      <Sun className="w-6 h-6 md:w-12 md:h-12 text-pink-600" />
-                    </div>
-                    <p className="text-sm md:text-lg font-semibold text-gray-800 dark:text-white">Clean & Bright</p>
-                    {selectedTheme === "light" && (
-                      <Check className="absolute top-2 right-2 w-4 h-4 md:w-6 md:h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
-                    )}
-                  </button>
+            <div className="w-full max-w-2xl mx-auto px-2">
+              <div className="flex flex-col md:flex-row gap-3 md:gap-4 justify-center">
+                <button
+                  className={`relative w-full md:w-56 p-3 md:p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
+                    selectedTheme === "light"
+                      ? "border-pink-500 shadow-lg shadow-pink-200"
+                      : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
+                  }`}
+                  onClick={() => handleSelectTheme("light")}
+                >
+                  <div className="bg-gradient-to-br from-slate-100 via-pink-50 to-purple-100 rounded-xl h-16 md:h-24 flex items-center justify-center mb-2 md:mb-3">
+                    <Sun className="w-6 h-6 md:w-10 md:h-10 text-pink-600" />
+                  </div>
+                  <p className="text-sm md:text-base font-semibold text-gray-800 dark:text-white">Clean & Bright</p>
+                  {selectedTheme === "light" && (
+                    <Check className="absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 text-pink-600 bg-pink-100 rounded-full p-1" />
+                  )}
+                </button>
 
-                  <button
-                    className={`relative w-full md:w-64 p-3 md:p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-                      selectedTheme === "dark"
-                        ? "border-pink-500 shadow-lg shadow-pink-200"
-                        : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
-                    }`}
-                    onClick={() => handleSelectTheme("dark")}
-                  >
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl h-18 md:h-32 flex items-center justify-center mb-2 md:mb-4">
-                      <Moon className="w-6 h-6 md:w-12 md:h-12 text-purple-400" />
-                    </div>
-                    <p className="text-sm md:text-lg font-semibold text-gray-800 dark:text-white">Moody & Minimal</p>
-                    {selectedTheme === "dark" && (
-                      <Check className="absolute top-2 right-2 w-4 h-4 md:w-6 md:h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
-                    )}
-                  </button>
-                </div>
+                <button
+                  className={`relative w-full md:w-56 p-3 md:p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
+                    selectedTheme === "dark"
+                      ? "border-pink-500 shadow-lg shadow-pink-200"
+                      : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
+                  }`}
+                  onClick={() => handleSelectTheme("dark")}
+                >
+                  <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl h-16 md:h-24 flex items-center justify-center mb-2 md:mb-3">
+                    <Moon className="w-6 h-6 md:w-10 md:h-10 text-purple-400" />
+                  </div>
+                  <p className="text-sm md:text-base font-semibold text-gray-800 dark:text-white">Moody & Minimal</p>
+                  {selectedTheme === "dark" && (
+                    <Check className="absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 text-pink-600 bg-pink-100 rounded-full p-1" />
+                  )}
+                </button>
               </div>
             </div>
 
-            <div className="flex-shrink-0 text-center mt-6">
-              <Button
-                size="lg"
-                onClick={() => handleNextStep("persona")}
-                disabled={!selectedTheme}
-                className="min-w-48 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </Button>
-            </div>
+            <Button
+              size="lg"
+              onClick={() => handleNextStep("persona")}
+              disabled={!selectedTheme}
+              className="min-w-48 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </Button>
           </div>
         )
 
       case "persona":
         return (
-          <div className="flex flex-col h-full">
-            <div className="flex-shrink-0 text-center mb-6">
+          <div className="flex flex-col items-center justify-center text-center space-y-6">
+            <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">
                 How should I talk to you?
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-300">Choose the type of support you're looking for.</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4">
-              <div className="w-full max-w-2xl mx-auto px-2">
-                <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center">
-                  <button
-                    className={`relative w-full md:w-72 p-4 md:p-8 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-center ${
-                      selectedPersona === "friend"
-                        ? "border-pink-500 shadow-lg shadow-pink-200"
-                        : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
-                    }`}
-                    onClick={() => setSelectedPersona("friend")}
-                  >
-                    <Heart className="w-5 h-5 md:w-8 md:h-8 text-pink-500 mx-auto mb-2 md:mb-4" />
-                    <h3 className="text-base md:text-xl font-semibold text-gray-800 dark:text-white mb-1 md:mb-2">
-                      As a Friend
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-xs md:text-sm leading-relaxed">
-                      Casual, supportive, and here to listen.
-                    </p>
-                    {selectedPersona === "friend" && (
-                      <Check className="absolute top-2 right-2 w-4 h-4 md:w-6 md:h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
-                    )}
-                  </button>
+            <div className="w-full max-w-2xl mx-auto px-2">
+              <div className="flex flex-col md:flex-row gap-3 md:gap-4 justify-center">
+                <button
+                  className={`relative w-full md:w-64 p-3 md:p-5 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-center ${
+                    selectedPersona === "friend"
+                      ? "border-pink-500 shadow-lg shadow-pink-200"
+                      : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
+                  }`}
+                  onClick={() => setSelectedPersona("friend")}
+                >
+                  <Heart className="w-5 h-5 md:w-7 md:h-7 text-pink-500 mx-auto mb-2 md:mb-3" />
+                  <h3 className="text-base md:text-lg font-semibold text-gray-800 dark:text-white mb-1 md:mb-2">
+                    As a Friend
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-xs md:text-sm leading-relaxed">
+                    Casual, supportive, and here to listen.
+                  </p>
+                  {selectedPersona === "friend" && (
+                    <Check className="absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 text-pink-600 bg-pink-100 rounded-full p-1" />
+                  )}
+                </button>
 
-                  <button
-                    className={`relative w-full md:w-72 p-4 md:p-8 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-center ${
-                      selectedPersona === "therapist"
-                        ? "border-pink-500 shadow-lg shadow-pink-200"
-                        : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
-                    }`}
-                    onClick={() => setSelectedPersona("therapist")}
-                  >
-                    <BrainCircuit className="w-5 h-5 md:w-8 md:h-8 text-purple-500 mx-auto mb-2 md:mb-4" />
-                    <h3 className="text-base md:text-xl font-semibold text-gray-800 dark:text-white mb-1 md:mb-2">
-                      As a Therapist
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-xs md:text-sm leading-relaxed">
-                      Guided, professional, and focused on your growth.
-                    </p>
-                    {selectedPersona === "therapist" && (
-                      <Check className="absolute top-2 right-2 w-4 h-4 md:w-6 md:h-6 text-pink-600 bg-pink-100 rounded-full p-1" />
-                    )}
-                  </button>
-                </div>
+                <button
+                  className={`relative w-full md:w-64 p-3 md:p-5 rounded-2xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl text-center ${
+                    selectedPersona === "therapist"
+                      ? "border-pink-500 shadow-lg shadow-pink-200"
+                      : "border-gray-200 dark:border-gray-600 hover:border-pink-300"
+                  }`}
+                  onClick={() => setSelectedPersona("therapist")}
+                >
+                  <BrainCircuit className="w-5 h-5 md:w-7 md:h-7 text-purple-500 mx-auto mb-2 md:mb-3" />
+                  <h3 className="text-base md:text-lg font-semibold text-gray-800 dark:text-white mb-1 md:mb-2">
+                    As a Therapist
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-xs md:text-sm leading-relaxed">
+                    Guided, professional, and focused on your growth.
+                  </p>
+                  {selectedPersona === "therapist" && (
+                    <Check className="absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 text-pink-600 bg-pink-100 rounded-full p-1" />
+                  )}
+                </button>
               </div>
             </div>
 
-            <div className="flex-shrink-0 text-center mt-6">
-              <Button
-                size="lg"
-                onClick={() => handleNextStep("complete")}
-                disabled={!selectedPersona}
-                className="min-w-48 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Finish Setup
-              </Button>
-            </div>
+            <Button
+              size="lg"
+              onClick={() => handleNextStep("complete")}
+              disabled={!selectedPersona}
+              className="min-w-48 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Finish Setup
+            </Button>
           </div>
         )
 

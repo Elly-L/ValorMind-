@@ -33,22 +33,21 @@ export default function LoadingSpinner() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
       <div className="relative">
-        <div className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
+        {/* Background glow layers with reduced opacity */}
+        <div className="absolute inset-0 text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent opacity-20 blur-xl animate-pulse -z-10">
+          ValorMind AI
+        </div>
+        <div className="absolute inset-0 text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent opacity-10 blur-2xl animate-pulse -z-20">
+          ValorMind AI
+        </div>
+
+        {/* Main animated text with higher z-index and better visibility */}
+        <div className="relative z-10 text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm">
           {letters.map((letter, index) => (
             <span key={index} className="inline-block" style={getLetterAnimation(index, letter)}>
               {letter === " " ? "\u00A0" : letter}
             </span>
           ))}
-        </div>
-
-        <div className="absolute inset-0 text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent opacity-30 blur-lg animate-pulse">
-          ValorMind AI
-        </div>
-        <div className="absolute inset-0 text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent opacity-15 blur-2xl animate-pulse">
-          ValorMind AI
-        </div>
-        <div className="absolute inset-0 text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 via-indigo-500 to-cyan-500 bg-clip-text text-transparent opacity-10 blur-3xl animate-pulse">
-          ValorMind AI
         </div>
       </div>
 
