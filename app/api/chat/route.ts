@@ -9,6 +9,12 @@ export async function POST(request: NextRequest) {
   try {
     const { messages, mode, userName } = await request.json()
 
+<<<<<<< HEAD
+=======
+    console.log("[v0] API Key length:", OPENROUTER_API_KEY?.length || 0)
+    console.log("[v0] API Key starts with:", OPENROUTER_API_KEY?.substring(0, 10) || "undefined")
+
+>>>>>>> 2e769a5df462154ba48f4ee28ac348fd0289edf1
     if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY.trim() === "") {
       console.error("OpenRouter API key is missing or empty")
       return NextResponse.json({ error: "OpenRouter API key is not configured" }, { status: 500 })
