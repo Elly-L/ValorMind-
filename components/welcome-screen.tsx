@@ -32,14 +32,12 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
   }, [])
 
   const getMobileBackgroundImages = () => [
-    "/images/tulip-field-mobile.png",
-    "/images/motivational-cartoon-mobile.png",
-    "/images/sunset-landscape-mobile.png",
     "/images/water-splash-mobile.png",
-    "/images/homer-eyes-mobile.png",
+    "/images/zen-bamboo-vertical.png",
+    "/images/tulip-field-mobile.png",
+    "/images/sunset-landscape-mobile.png",
     "/images/heart-cloud-mobile.png",
     "/images/finger-heart-mobile.png",
-    "/images/zen-bamboo-vertical.png",
     "/images/cute-bear-mobile.png",
   ]
 
@@ -66,6 +64,11 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
       const randomIndex = Math.floor(Math.random() * backgrounds.length)
       setBackgroundIndex(randomIndex)
       setCurrentBackground(backgrounds[randomIndex])
+    } else {
+      const allImages = getAllBackgroundImages()
+      setAvailableBackgrounds(allImages)
+      setBackgroundIndex(0)
+      setCurrentBackground(allImages[0])
     }
 
     const fonts = ["font-serif", "font-sans"]
@@ -175,13 +178,15 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
             }
-          : {
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }),
+          : {}),
         minHeight: "100vh",
         minWidth: "100vw",
       }}
     >
+      {!showImages && (
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-slate-800 dark:to-gray-900" />
+      )}
+
       <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
 
       <div className="relative z-10 p-4 md:p-6 flex justify-between items-start">
@@ -210,7 +215,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 md:px-6">
         <div className="text-center mb-8 md:mb-12">
           <DynamicTitle className="mb-2 md:mb-4" />
-          <p className="text-lg sm:text-xl md:text-2xl text-white/90 drop-shadow-lg font-light px-4">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-900 dark:text-white/90 drop-shadow-lg font-light px-4">
             {getWelcomeMessage()}
           </p>
         </div>
@@ -220,7 +225,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
             <input
               type="text"
               placeholder="What's on your mind today?"
-              className="w-full bg-transparent text-white placeholder-white/60 px-4 md:px-6 py-3 md:py-4 rounded-xl outline-none text-base md:text-lg"
+              className="w-full bg-transparent text-gray-900 dark:text-white placeholder-gray-600 dark:placeholder-white/60 px-4 md:px-6 py-3 md:py-4 rounded-xl outline-none text-base md:text-lg"
               onKeyPress={(e) => {
                 if (e.key === "Enter" && e.currentTarget.value.trim()) {
                   onStartConversation(e.currentTarget.value.trim())
@@ -232,7 +237,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
           <div className="flex justify-center mt-4">
             <Button
               onClick={() => onStartConversation("Let's start chatting!")}
-              className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white border border-white/30 rounded-full px-6 py-2 transition-all duration-300 hover:scale-105"
+              className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-gray-900 dark:text-white border border-white/30 rounded-full px-6 py-2 transition-all duration-300 hover:scale-105"
               variant="ghost"
             >
               Dive in 🚀
@@ -243,7 +248,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
 
       <div className="relative z-10 p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
-          <p className="text-white/80 text-center mb-3 md:mb-4 font-medium text-sm md:text-base">
+          <p className="text-gray-800 dark:text-white/80 text-center mb-3 md:mb-4 font-medium text-sm md:text-base">
             Or try one of these:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -251,7 +256,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
               <div
                 key={index}
                 onClick={() => onStartConversation(prompt)}
-                className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border border-white/20 rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-gray-900 dark:text-white border border-white/20 rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
                 <span className="text-sm md:text-base font-medium">"{prompt}"</span>
               </div>
