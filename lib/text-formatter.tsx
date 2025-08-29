@@ -4,10 +4,37 @@ interface FormattedTextProps {
 }
 
 export function FormattedText({ text, className = "" }: FormattedTextProps) {
+  const preprocessText = (text: string) => {
+    // Clean up malformed asterisk patterns
+    let cleaned = text
+
+    // Fix patterns like "*text**:" to "**text**:"
+    cleaned = cleaned.replace(/\*([^*]+)\*\*:/g, "**$1**:")
+
+    // Fix patterns like "text."* to "text.**"
+    cleaned = cleaned.replace(/([^*])\.\*(?!\*)/g, "$1.**")
+
+    // Fix patterns like "*text*:" to "**text**:"
+    cleaned = cleaned.replace(/\*([^*]+)\*:/g, "**$1**:")
+
+    // Fix single trailing asterisks that should be double
+    cleaned = cleaned.replace(/([^*])\*(?=\s|$|[.,:;!?])/g, "$1**")
+
+    // Fix leading single asterisks that should be double
+    cleaned = cleaned.replace(/(?:^|\s)\*([^*\s])/g, " **$1")
+
+    // Clean up any triple or more asterisks to double
+    cleaned = cleaned.replace(/\*{3,}/g, "**")
+
+    return cleaned
+  }
+
   // Function to parse and format text with markdown-like syntax
   const formatText = (text: string) => {
+    const processedText = preprocessText(text)
+
     // Split by lines first to handle bullet points
-    const lines = text.split("\n")
+    const lines = processedText.split("\n")
 
     return lines.map((line, lineIndex) => {
       // Handle bullet points
@@ -40,7 +67,7 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
 
     // Find double asterisk patterns first (bold) **text**
     let match
-    const boldRegex = /\*\*(.*?)\*\*/g
+    const boldRegex = /\*\*([^*]+?)\*\*/g
     while ((match = boldRegex.exec(text)) !== null) {
       patterns.push({
         start: match.index,
@@ -51,7 +78,7 @@ export function FormattedText({ text, className = "" }: FormattedTextProps) {
     }
 
     // Find single asterisk patterns (italic) *text* but not if they're part of double asterisks
-    const italicRegex = /(?<!\*)\*([^*]+?)\*(?!\*)/g
+    const italicRegex = /(?<!\*)\*([^*\n]+?)\*(?!\*)/g
     while ((match = italicRegex.exec(text)) !== null) {
       // Check if this single asterisk is not part of a double asterisk pattern
       const isPartOfBold = patterns.some(

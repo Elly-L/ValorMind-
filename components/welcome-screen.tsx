@@ -187,7 +187,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
       <div className="relative z-10 p-4 md:p-6 flex justify-between items-start">
         <Button
           onClick={() => {
-            window.location.href = "/"
+            window.location.href = "/home"
           }}
           className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/30 rounded-full p-2 md:p-3"
           variant="ghost"
