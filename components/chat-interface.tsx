@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type, FileText } from "lucide-react"
+import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type, FileText, Sun, Moon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { performSafetyCheck } from "../lib/ai-personality"
@@ -16,6 +16,7 @@ import SmartBackgroundDiscovery from "./smart-background-discovery"
 import TherapyNotesPanel from "./therapy-notes-panel"
 import { createClient } from "@/lib/supabase"
 import type { ChatMessage } from "@/lib/supabase"
+import { useTheme } from "next-themes"
 
 interface Message {
   id: string
@@ -50,13 +51,14 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   const [showImageModal, setShowImageModal] = useState(false)
   const [selectedBackgroundImage, setSelectedBackgroundImage] = useState<string | null>(null)
   const [showTherapyNotes, setShowTherapyNotes] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
+  const [hasSeenTutorial, setHasSeenTutorial] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
-
-  const [showTutorial, setShowTutorial] = useState(false)
-  const [hasSeenTutorial, setHasSeenTutorial] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   const fontOptions = {
     default: { name: "Default", class: "font-sans" },
@@ -76,6 +78,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   }, [messages])
 
   useEffect(() => {
+    setMounted(true)
     loadUserProfile()
     const tutorialSeen = localStorage.getItem("valormind-tutorial-seen")
     const savedFont = localStorage.getItem("valormind-selected-font")
@@ -450,35 +453,35 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
       userBubble: userMessageBgOptions[userMessageBg as keyof typeof userMessageBgOptions].bg,
       aiBubble: aiBubbleBgOptions[selectedGradient as keyof typeof aiBubbleBgOptions],
       header: "ValorMind AI",
-      inputBg: "bg-white/80 backdrop-blur-sm",
+      inputBg: "bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm",
     },
     therapist: {
       background: gradientOptions[selectedGradient as keyof typeof gradientOptions].bg,
       userBubble: userMessageBgOptions[userMessageBg as keyof typeof userMessageBgOptions].bg,
       aiBubble: aiBubbleBgOptions[selectedGradient as keyof typeof aiBubbleBgOptions],
       header: "ValorMind AI",
-      inputBg: "bg-white/60 backdrop-blur-sm",
+      inputBg: "bg-white/60 dark:bg-gray-900/80 backdrop-blur-sm",
     },
     vent: {
       background: gradientOptions[selectedGradient as keyof typeof gradientOptions].bg,
       userBubble: userMessageBgOptions[userMessageBg as keyof typeof userMessageBgOptions].bg,
       aiBubble: aiBubbleBgOptions[selectedGradient as keyof typeof aiBubbleBgOptions],
       header: "ValorMind AI",
-      inputBg: "bg-white/60 backdrop-blur-sm",
+      inputBg: "bg-white/60 dark:bg-gray-900/80 backdrop-blur-sm",
     },
     journal: {
       background: gradientOptions[selectedGradient as keyof typeof gradientOptions].bg,
       userBubble: userMessageBgOptions[userMessageBg as keyof typeof userMessageBgOptions].bg,
       aiBubble: aiBubbleBgOptions[selectedGradient as keyof typeof aiBubbleBgOptions],
       header: "ValorMind AI",
-      inputBg: "bg-white/60 backdrop-blur-sm",
+      inputBg: "bg-white/60 dark:bg-gray-900/80 backdrop-blur-sm",
     },
     "avatar-therapy": {
       background: gradientOptions[selectedGradient as keyof typeof gradientOptions].bg,
       userBubble: userMessageBgOptions[userMessageBg as keyof typeof userMessageBgOptions].bg,
       aiBubble: aiBubbleBgOptions[selectedGradient as keyof typeof aiBubbleBgOptions],
       header: "ValorMind AI",
-      inputBg: "bg-white/60 backdrop-blur-sm",
+      inputBg: "bg-white/60 dark:bg-gray-900/80 backdrop-blur-sm",
     },
   }
 
@@ -561,37 +564,39 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
               : "lg:ml-80"
         }`}
       >
-        <div className="sticky top-0 z-10 bg-white/20 backdrop-blur-md border-b border-white/30 p-4 relative">
+        <div className="sticky top-0 z-10 bg-white/20 dark:bg-gray-900/20 backdrop-blur-md border-b border-white/30 dark:border-gray-700/30 p-4 relative">
           <div className="max-w-2xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden text-gray-700 hover:bg-white/20"
+                className="lg:hidden text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-gray-800/20"
               >
                 <Menu className="w-4 h-4" />
               </Button>
               <Button
                 onClick={() => router.push("/")}
-                className="bg-white/80 hover:bg-white/90 text-gray-800 border border-white/50 shadow-sm px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-md"
+                className="bg-white/80 dark:bg-gray-800/80 hover:bg-white/90 dark:hover:bg-gray-800/90 text-gray-800 dark:text-gray-200 border border-white/50 dark:border-gray-700/50 shadow-sm px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-md"
               >
                 Back
               </Button>
             </div>
             <div className="flex items-center gap-3">
-              <h1 className={`text-xl font-semibold text-gray-800 ${getCurrentFontClass()}`}>{currentStyle.header}</h1>
+              <h1 className={`text-xl font-semibold text-gray-800 dark:text-gray-200 ${getCurrentFontClass()}`}>
+                {currentStyle.header}
+              </h1>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
                   mode === "friend"
-                    ? "bg-blue-100/80 text-blue-700 border-blue-200/60"
+                    ? "bg-blue-100/80 dark:bg-blue-900/80 text-blue-700 dark:text-blue-300 border-blue-200/60 dark:border-blue-700/60"
                     : mode === "therapist" || mode === "avatar-therapy"
-                      ? "bg-purple-100/80 text-purple-700 border-purple-200/60"
+                      ? "bg-purple-100/80 dark:bg-purple-900/80 text-purple-700 dark:text-purple-300 border-purple-200/60 dark:border-purple-700/60"
                       : mode === "vent"
-                        ? "bg-orange-100/80 text-orange-700 border-orange-200/60"
+                        ? "bg-orange-100/80 dark:bg-orange-900/80 text-orange-700 dark:text-orange-300 border-orange-200/60 dark:border-orange-700/60"
                         : mode === "journal"
-                          ? "bg-green-100/80 text-green-700 border-green-200/60"
-                          : "bg-gray-100/80 text-gray-700 border-gray-200/60"
+                          ? "bg-green-100/80 dark:bg-green-900/80 text-green-700 dark:text-green-300 border-green-200/60 dark:border-green-700/60"
+                          : "bg-gray-100/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border-gray-200/60 dark:border-gray-700/60"
                 }`}
               >
                 {mode === "friend"
@@ -611,12 +616,23 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 onThemeButtonClick={() => setShowMenu(true)}
                 isThemeMenuOpen={showMenu}
               />
+              {mounted && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-gray-800/20 relative z-10"
+                  title="Toggle theme"
+                >
+                  {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
+              )}
               {(mode === "therapist" || mode === "avatar-therapy") && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowTherapyNotes(true)}
-                  className="text-gray-700 hover:bg-white/20 relative z-10"
+                  className="text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-gray-800/20 relative z-10"
                   title="Therapy Notes"
                 >
                   <FileText className="w-4 h-4" />
@@ -629,7 +645,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                   setShowFontMenu(!showFontMenu)
                   setShowMenu(false)
                 }}
-                className="text-gray-700 hover:bg-white/20 relative z-10"
+                className="text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-gray-800/20 relative z-10"
                 data-tutorial="font-button"
               >
                 <Type className="w-4 h-4" />
@@ -641,7 +657,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                   setShowMenu(!showMenu)
                   setShowFontMenu(false)
                 }}
-                className="text-gray-700 hover:bg-white/20 relative z-10"
+                className="text-gray-700 dark:text-gray-300 hover:bg-white/20 dark:hover:bg-gray-800/20 relative z-10"
                 data-tutorial="theme-button"
               >
                 <Palette className="w-4 h-4" />
@@ -650,18 +666,18 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
           </div>
 
           {showFontMenu && (
-            <div className="max-w-2xl mx-auto mt-4 p-4 bg-white/90 backdrop-blur-md rounded-xl border border-white/30 relative">
+            <div className="max-w-2xl mx-auto mt-4 p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl border border-white/30 dark:border-gray-700/30 relative">
               <Button
                 onClick={() => setShowFontMenu(false)}
                 variant="ghost"
                 size="sm"
-                className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 hover:bg-white/20 rounded-full p-1"
+                className="absolute top-2 right-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-red-500 hover:bg-white/20 dark:hover:bg-gray-800/20 rounded-full p-1"
               >
                 <X className="w-4 h-4" />
               </Button>
 
               <div className="space-y-2" data-tutorial="font-selector">
-                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                   <Type className="w-4 h-4 mr-2" />
                   Font Style
                 </h3>
@@ -669,8 +685,8 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                   <button
                     key={key}
                     onClick={() => handleFontSelect(key)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-all hover:bg-white/60 ${
-                      selectedFont === key ? "bg-purple-500 text-white" : "bg-white/40 text-gray-800"
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-all hover:bg-white/60 dark:hover:bg-gray-800/60 ${
+                      selectedFont === key ? "bg-purple-500 text-white" : "bg-white/40 text-gray-800 dark:text-gray-200"
                     } ${font.class}`}
                   >
                     {font.name}
@@ -681,19 +697,21 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
           )}
 
           {showMenu && (
-            <div className="max-w-2xl mx-auto mt-4 p-4 bg-white/30 backdrop-blur-md rounded-xl border border-white/30 relative">
+            <div className="max-w-2xl mx-auto mt-4 p-4 bg-white/30 dark:bg-gray-900/30 backdrop-blur-md rounded-xl border border-white/30 dark:border-gray-700/30 relative">
               <Button
                 onClick={() => setShowMenu(false)}
                 variant="ghost"
                 size="sm"
-                className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 hover:bg-white/20 rounded-full p-1"
+                className="absolute top-2 right-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-red-500 hover:bg-white/20 dark:hover:bg-gray-800/20 rounded-full p-1"
               >
                 <X className="w-4 h-4" />
               </Button>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div data-tutorial="background-themes">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Background Theme</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Background Theme
+                  </label>
                   <div className="flex gap-2 flex-wrap">
                     {Object.entries(gradientOptions).map(([key, option]) => (
                       <button
@@ -706,7 +724,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                         className={`w-8 h-8 rounded-full ${option.color} border-2 transition-all hover:scale-110 ${
                           selectedGradient === key && !selectedBackgroundImage
                             ? "border-gray-800 shadow-lg"
-                            : "border-white/50"
+                            : "border-white/50 dark:border-gray-700/50"
                         }`}
                         title={key.charAt(0).toUpperCase() + key.slice(1)}
                       />
@@ -715,13 +733,15 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 </div>
 
                 <div data-tutorial="background-images">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Background Image</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Background Image
+                  </label>
                   <Button
                     onClick={() => setShowImageModal(true)}
                     variant="outline"
                     size="sm"
-                    className={`bg-white/60 hover:bg-white/80 text-gray-700 border-2 transition-all ${
-                      selectedBackgroundImage ? "border-pink-500 shadow-lg" : "border-white/50"
+                    className={`bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-800/80 text-gray-700 dark:text-gray-200 border-2 transition-all ${
+                      selectedBackgroundImage ? "border-pink-500 shadow-lg" : "border-white/50 dark:border-gray-700/50"
                     }`}
                   >
                     <ImageIcon className="w-4 h-4 mr-2" />
@@ -735,7 +755,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                       }}
                       variant="ghost"
                       size="sm"
-                      className="ml-2 text-gray-600 hover:text-red-500"
+                      className="ml-2 text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-500"
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -743,7 +763,9 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 </div>
 
                 <div data-tutorial="message-bubbles">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Message Bubble Color</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Message Bubble Color
+                  </label>
                   <div className="flex gap-2 flex-wrap">
                     {Object.entries(userMessageBgOptions).map(([key, option]) => (
                       <button
@@ -753,7 +775,9 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                           setShowMenu(false)
                         }}
                         className={`w-8 h-8 rounded-full ${option.color} border-2 transition-all hover:scale-110 ${
-                          userMessageBg === key ? "border-gray-800 shadow-lg" : "border-white/50"
+                          userMessageBg === key
+                            ? "border-gray-800 shadow-lg"
+                            : "border-white/50 dark:border-gray-700/50"
                         }`}
                         title={key === "default" ? "Pink-Purple" : key.charAt(0).toUpperCase() + key.slice(1)}
                       />
@@ -767,7 +791,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                   onClick={() => setShowMenu(false)}
                   variant="outline"
                   size="sm"
-                  className="bg-white/60 hover:bg-white/80 text-gray-700 border border-white/50 px-6"
+                  className="bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-800/80 text-gray-700 dark:text-gray-200 border border-white/50 dark:border-gray-700/50 px-6"
                 >
                   Close
                 </Button>
@@ -783,7 +807,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
             {messages.map((message) => (
               <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl backdrop-blur-sm border border-white/20 ${
+                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl backdrop-blur-sm border border-white/20 dark:border-gray-700/20 ${
                     message.sender === "user"
                       ? `${currentStyle.userBubble} shadow-lg`
                       : `${currentStyle.aiBubble} shadow-lg`
@@ -794,7 +818,10 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="mb-2">
                       {message.attachments.map((attachment, index) => (
-                        <div key={index} className="text-xs bg-black/10 rounded px-2 py-1 mb-1 inline-block mr-1">
+                        <div
+                          key={index}
+                          className="text-xs bg-black/10 dark:bg-gray-800/10 rounded px-2 py-1 mb-1 inline-block mr-1"
+                        >
                           📎 {attachment}
                         </div>
                       ))}
@@ -802,7 +829,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                   )}
                   <FormattedText text={message.content} className="text-sm leading-relaxed" />
                   <p
-                    className={`text-xs mt-1 opacity-70 ${message.sender === "user" ? "text-gray-600" : "text-gray-500"}`}
+                    className={`text-xs mt-1 opacity-70 ${message.sender === "user" ? "text-gray-600 dark:text-gray-400" : "text-gray-500 dark:text-gray-300"}`}
                   >
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
@@ -834,7 +861,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
         </div>
 
         <div
-          className={`fixed bottom-0 right-0 p-4 bg-white/20 backdrop-blur-md border-t border-white/30 transition-all duration-300 ${
+          className={`fixed bottom-0 right-0 p-4 bg-white/20 dark:bg-gray-900/20 backdrop-blur-md border-t border-white/30 dark:border-gray-700/30 transition-all duration-300 ${
             sidebarOpen && !window.matchMedia("(min-width: 1024px)").matches
               ? "left-0"
               : sidebarCollapsed
@@ -848,14 +875,14 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 {attachments.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-2 text-sm"
+                    className="flex items-center gap-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg px-3 py-2 text-sm"
                   >
                     <span className="truncate max-w-32">{file.name}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => removeAttachment(index)}
-                      className="h-4 w-4 p-0 text-gray-500 hover:text-red-500"
+                      className="h-4 w-4 p-0 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-500"
                     >
                       <X className="w-3 h-3" />
                     </Button>
@@ -864,13 +891,13 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
               </div>
             )}
             <div
-              className={`flex items-center space-x-2 ${currentStyle.inputBg} rounded-full p-2 border border-white/20`}
+              className={`flex items-center space-x-2 ${currentStyle.inputBg} rounded-full p-2 border border-white/20 dark:border-gray-700/20`}
             >
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-full p-2 text-gray-600 hover:bg-white/20"
+                className="rounded-full p-2 text-gray-600 dark:text-gray-400 hover:bg-white/20 dark:hover:bg-gray-800/20"
               >
                 <Paperclip className="w-4 h-4" />
               </Button>
@@ -887,7 +914,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={mode === "friend" ? "What's on your mind?" : "Share what you're feeling..."}
-                className={`flex-1 bg-transparent border-none outline-none resize-none px-3 py-2 text-sm placeholder-gray-500 ${getCurrentFontClass()}`}
+                className={`flex-1 bg-transparent border-none outline-none resize-none px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-gray-200 ${getCurrentFontClass()}`}
                 rows={1}
                 disabled={isLoading}
               />
