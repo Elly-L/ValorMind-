@@ -2,11 +2,12 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Plus, MessageSquare, Trash2, Edit3, X, ChevronRight, ChevronLeft } from "lucide-react"
+import { Plus, MessageSquare, Trash2, Edit3, X, ChevronRight, ChevronLeft, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase"
 import type { ChatSession } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 
 interface ChatSidebarProps {
   currentMode: "friend" | "therapist"
@@ -35,6 +36,7 @@ export default function ChatSidebar({
   const [editTitle, setEditTitle] = useState("")
   const [isCollapsed, setIsCollapsed] = useState(true)
   const supabase = createClient()
+  const router = useRouter()
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 1024
   const shouldBeExpanded = isMobile ? isOpen : !isCollapsed
@@ -214,9 +216,37 @@ export default function ChatSidebar({
           >
             <div className="flex items-center justify-between mb-4">
               {shouldBeExpanded && (
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {currentMode === "friend" ? "Friend Chats" : "Therapy Sessions"}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => router.push("/home")}
+                    variant="ghost"
+                    size="sm"
+                    className={`${
+                      hasBackgroundImage
+                        ? "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-white/30 text-gray-700"
+                        : "bg-white/60 hover:bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-700"
+                    } rounded-lg p-2 shadow-sm`}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {currentMode === "friend" ? "Friend Chats" : "Therapy Sessions"}
+                  </h2>
+                </div>
+              )}
+              {!shouldBeExpanded && (
+                <Button
+                  onClick={() => router.push("/home")}
+                  variant="ghost"
+                  size="sm"
+                  className={`${
+                    hasBackgroundImage
+                      ? "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-white/30 text-gray-700"
+                      : "bg-white/60 hover:bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-700"
+                  } rounded-lg p-2 shadow-sm mb-2`}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
               )}
               <div className="flex items-center gap-2">
                 <Button

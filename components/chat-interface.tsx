@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type, FileText } from "lucide-react"
+import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { performSafetyCheck } from "../lib/ai-personality"
@@ -12,7 +12,6 @@ import ChatSidebar from "./chat-sidebar"
 import WelcomeScreen from "./welcome-screen"
 import ImageBackgroundModal from "./image-background-modal"
 import TutorialOverlay from "./tutorial-overlay"
-import SmartBackgroundDiscovery from "./smart-background-discovery"
 import TherapyNotesPanel from "./therapy-notes-panel"
 import { createClient } from "@/lib/supabase"
 import type { ChatMessage } from "@/lib/supabase"
@@ -36,6 +35,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isSending, setIsSending] = useState(false)
   const [selectedGradient, setSelectedGradient] = useState("default")
   const [userMessageBg, setUserMessageBg] = useState("default")
   const [showMenu, setShowMenu] = useState(false)
@@ -59,6 +59,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
   const supabase = createClient()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   const fontOptions = {
     default: { name: "Default", class: "font-sans" },
@@ -91,7 +92,11 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
     }
 
     setHasSeenTutorial(!!tutorialSeen)
-  }, [mode])
+
+    if (!currentSessionId && !showWelcome) {
+      createNewSession()
+    }
+  }, []) // Removed mode dependency to prevent infinite re-renders
 
   const handleFontSelect = (fontKey: string) => {
     setSelectedFont(fontKey)
@@ -122,21 +127,16 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
     console.log("[v0] Starting conversation with prompt:", prompt.substring(0, 50))
     setShowWelcome(false)
 
-    const sessionCreated = await createNewSession()
-
-    if (!sessionCreated) {
-      console.error("[v0] Failed to create session, cannot start conversation")
-      setShowWelcome(true)
-      return
+    if (!currentSessionId) {
+      const sessionCreated = await createNewSession()
+      if (!sessionCreated) {
+        console.error("[v0] Failed to create session, cannot start conversation")
+        setShowWelcome(true)
+        return
+      }
     }
 
-    // Send the user's prompt as first message after session is created
-    setTimeout(() => {
-      setInputValue(prompt)
-      setTimeout(() => {
-        sendMessage(prompt)
-      }, 100)
-    }, 100)
+    setInputValue(prompt)
   }
 
   const createNewSession = async (): Promise<boolean> => {
@@ -151,22 +151,22 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
         return false
       }
 
-      const { data, error } = await supabase
-        .from("chat_sessions")
-        .insert({
-          user_id: user.id,
-          title: `New ${mode} chat`,
-          mode: mode,
-        })
-        .select()
-        .single()
+      const sessionData = {
+        user_id: user.id,
+        title: `New ${mode} chat`,
+        mode: mode,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      const { data, error } = await supabase.from("chat_sessions").insert(sessionData).select("id").single()
 
       if (error) {
         console.error("[v0] Error creating session:", error)
         return false
       }
 
-      if (!data || !data.id) {
+      if (!data?.id) {
         console.error("[v0] Session created but no ID returned")
         return false
       }
@@ -273,7 +273,6 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
 
         setFirstMessageSent(true)
       } else {
-        // Update session timestamp for all other messages
         await supabase.from("chat_sessions").update({ updated_at: new Date().toISOString() }).eq("id", currentSessionId)
       }
     } catch (error) {
@@ -292,7 +291,9 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
 
   const sendMessage = async (prompt?: string) => {
     const messageContent = prompt || inputValue
-    if ((!messageContent.trim() && attachments.length === 0) || isLoading) return
+    if ((!messageContent.trim() && attachments.length === 0) || isLoading || isSending) return
+
+    setIsSending(true)
 
     const safetyResponse = performSafetyCheck(messageContent)
     if (safetyResponse) {
@@ -306,6 +307,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
       setMessages((prev) => [...prev, safetyMessage])
       await saveMessage(safetyMessage)
       setInputValue("")
+      setIsSending(false)
       return
     }
 
@@ -361,7 +363,6 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
         currentSessionId &&
         [...messages, userMessage, aiMessage].filter((m) => m.sender === "user").length >= 3
       ) {
-        // Generate insights in background after session has enough content
         setTimeout(async () => {
           try {
             await fetch("/api/therapy-insights", {
@@ -392,6 +393,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
       await saveMessage(errorMessage)
     } finally {
       setIsLoading(false)
+      setIsSending(false)
     }
   }
 
@@ -545,6 +547,11 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
     localStorage.setItem("valormind-tutorial-seen", "true")
   }
 
+  const stopProcessing = () => {
+    setIsLoading(false)
+    setIsSending(false)
+  }
+
   if (showWelcome && messages.length === 0) {
     return (
       <WelcomeScreen
@@ -559,7 +566,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
 
   return (
     <div
-      className="flex h-screen"
+      className="flex h-screen overflow-hidden"
       style={
         selectedBackgroundImage
           ? {
@@ -588,7 +595,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
 
       {/* Main chat area */}
       <div
-        className={`flex-1 min-h-screen flex flex-col transition-all duration-300 ${
+        className={`flex-1 min-h-screen flex flex-col transition-all duration-300 overflow-hidden ${
           selectedBackgroundImage ? "relative z-10" : currentStyle.background
         } ${
           sidebarOpen && !window.matchMedia("(min-width: 1024px)").matches
@@ -609,28 +616,25 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
             : {}
         }
       >
-        <div className="sticky top-0 z-10 bg-white/20 backdrop-blur-md border-b border-white/30 p-4 relative">
-          <div className="max-w-2xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
+        <div className="fixed top-0 left-0 right-0 z-20 bg-white/20 backdrop-blur-md border-b border-white/30 p-3 md:p-4">
+          <div className="max-w-full mx-auto flex items-center justify-between px-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden text-gray-700 hover:bg-white/20"
+                className="text-gray-700 hover:bg-white/20 flex-shrink-0"
               >
                 <Menu className="w-4 h-4" />
               </Button>
-              <Button
-                onClick={() => router.push("/home")}
-                className="bg-white/80 hover:bg-white/90 text-gray-800 border border-white/50 shadow-sm px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-md"
-              >
-                Back
-              </Button>
             </div>
-            <div className="flex items-center gap-3">
-              <h1 className={`text-xl font-semibold text-gray-800 ${getCurrentFontClass()}`}>{currentStyle.header}</h1>
+
+            <div className="flex items-center gap-2 min-w-0 flex-1 justify-center">
+              <h1 className={`text-lg md:text-xl font-semibold text-gray-800 ${getCurrentFontClass()} truncate`}>
+                {currentStyle.header}
+              </h1>
               <span
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
+                className={`px-2 py-1 rounded-full text-xs font-medium border transition-all duration-200 flex-shrink-0 ${
                   mode === "friend"
                     ? "bg-blue-100/80 text-blue-700 border-blue-200/60"
                     : mode === "therapist" || mode === "avatar-therapy"
@@ -653,23 +657,8 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                         : mode.charAt(0).toUpperCase() + mode.slice(1)}
               </span>
             </div>
-            <div className="relative flex items-center gap-2">
-              <SmartBackgroundDiscovery
-                messageCount={messages.filter((m) => m.sender === "user").length}
-                onThemeButtonClick={() => setShowMenu(true)}
-                isThemeMenuOpen={showMenu}
-              />
-              {(mode === "therapist" || mode === "avatar-therapy") && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowTherapyNotes(true)}
-                  className="text-gray-700 hover:bg-white/20 relative z-10"
-                  title="Therapy Notes"
-                >
-                  <FileText className="w-4 h-4" />
-                </Button>
-              )}
+
+            <div className="flex items-center gap-1 md:gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -677,8 +666,8 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                   setShowFontMenu(!showFontMenu)
                   setShowMenu(false)
                 }}
-                className="text-gray-700 hover:bg-white/20 relative z-10"
-                data-tutorial="font-button"
+                className="text-gray-700 hover:bg-white/20 p-1.5 md:p-2"
+                title="Change font style"
               >
                 <Type className="w-4 h-4" />
               </Button>
@@ -689,8 +678,8 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                   setShowMenu(!showMenu)
                   setShowFontMenu(false)
                 }}
-                className="text-gray-700 hover:bg-white/20 relative z-10"
-                data-tutorial="theme-button"
+                className="text-gray-700 hover:bg-white/20 p-1.5 md:p-2"
+                title="Change theme"
               >
                 <Palette className="w-4 h-4" />
               </Button>
@@ -824,14 +813,14 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 pb-24 relative">
+        <div className="flex-1 overflow-y-auto pt-20 md:pt-24 pb-24 px-2 md:px-4 relative">
           <div
-            className={`mx-auto space-y-4 transition-all duration-300 ${sidebarCollapsed ? "max-w-4xl" : "max-w-2xl"}`}
+            className={`mx-auto space-y-4 transition-all duration-300 max-w-full ${sidebarCollapsed ? "md:max-w-4xl" : "md:max-w-2xl"}`}
           >
             {messages.map((message) => (
               <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl backdrop-blur-sm border border-white/20 ${
+                  className={`max-w-[85%] md:max-w-xs lg:max-w-md px-3 md:px-4 py-2 md:py-3 rounded-2xl backdrop-blur-sm border border-white/20 ${
                     message.sender === "user"
                       ? `${currentStyle.userBubble} shadow-lg`
                       : `${currentStyle.aiBubble} shadow-lg`
@@ -862,17 +851,30 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className={`max-w-xs px-4 py-3 rounded-2xl ${currentStyle.aiBubble} ${getCurrentFontClass()}`}>
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                    <div
-                      className="w-2 h-2 bg-current rounded-full animate-bounce"
-                      style={{ animationDelay: "0.1s" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-current rounded-full animate-bounce"
-                      style={{ animationDelay: "0.2s" }}
-                    ></div>
+                <div
+                  className={`max-w-[85%] md:max-w-xs lg:max-w-md px-3 md:px-4 py-2 md:py-3 rounded-2xl ${currentStyle.aiBubble} ${getCurrentFontClass()}`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                      <div
+                        className="w-2 h-2 bg-current rounded-full animate-bounce"
+                        style={{ animationDelay: "0.1s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-current rounded-full animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
+                    </div>
+                    <Button
+                      onClick={stopProcessing}
+                      variant="ghost"
+                      size="sm"
+                      className="ml-2 p-1 h-6 w-6 rounded-full hover:bg-red-100 text-red-500"
+                      title="Stop processing"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -882,28 +884,24 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
         </div>
 
         <div
-          className={`fixed bottom-0 right-0 p-4 bg-white/20 backdrop-blur-md border-t border-white/30 transition-all duration-300 ${
-            sidebarOpen && !window.matchMedia("(min-width: 1024px)").matches
-              ? "left-0"
-              : sidebarCollapsed
-                ? "left-0 lg:left-16"
-                : "left-0 lg:left-80"
-          }`}
+          className={`fixed bottom-0 left-0 right-0 p-3 md:p-4 bg-white/20 backdrop-blur-md border-t border-white/30 z-20`}
         >
-          <div className={`mx-auto transition-all duration-300 ${sidebarCollapsed ? "max-w-4xl" : "max-w-2xl"}`}>
+          <div
+            className={`mx-auto max-w-full transition-all duration-300 ${sidebarCollapsed ? "md:max-w-4xl" : "md:max-w-2xl"}`}
+          >
             {attachments.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
                 {attachments.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-2 text-sm"
+                    className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-2 text-sm min-w-0"
                   >
                     <span className="truncate max-w-32">{file.name}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => removeAttachment(index)}
-                      className="h-4 w-4 p-0 text-gray-500 hover:text-red-500"
+                      className="h-4 w-4 p-0 text-gray-500 hover:text-red-500 flex-shrink-0"
                     >
                       <X className="w-3 h-3" />
                     </Button>
@@ -918,7 +916,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-full p-2 text-gray-600 hover:bg-white/20"
+                className="rounded-full p-2 text-gray-600 hover:bg-white/20 flex-shrink-0"
               >
                 <Paperclip className="w-4 h-4" />
               </Button>
@@ -935,15 +933,15 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={mode === "friend" ? "What's on your mind?" : "Share what you're feeling..."}
-                className={`flex-1 bg-transparent border-none outline-none resize-none px-3 py-2 text-sm placeholder-gray-500 text-gray-800 ${getCurrentFontClass()}`}
+                className={`flex-1 bg-transparent border-none outline-none resize-none px-3 py-2 text-sm placeholder-gray-500 text-gray-800 ${getCurrentFontClass()} min-w-0`}
                 rows={1}
                 disabled={isLoading}
               />
               <Button
                 onClick={() => sendMessage()}
-                disabled={(!inputValue.trim() && attachments.length === 0) || isLoading}
+                disabled={(!inputValue.trim() && attachments.length === 0) || isLoading || isSending}
                 size="sm"
-                className="rounded-full p-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white border-none"
+                className="rounded-full p-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white border-none flex-shrink-0"
               >
                 <Send className="w-4 h-4" />
               </Button>

@@ -2,24 +2,26 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, RotateCcw } from "lucide-react"
+import { ChevronLeft, RotateCcw, Send } from "lucide-react"
 import type { AIMode } from "../lib/ai-personality"
 import DynamicTitle from "./dynamic-title"
 
 interface WelcomeScreenProps {
   mode: AIMode
   onStartConversation: (prompt: string) => void
+  onBack?: () => void
   userGender?: string
   userName?: string
 }
 
-export default function WelcomeScreen({ mode, onStartConversation, userGender, userName }: WelcomeScreenProps) {
+export default function WelcomeScreen({ mode, onStartConversation, onBack, userGender, userName }: WelcomeScreenProps) {
   const [showImages, setShowImages] = useState(false)
   const [currentBackground, setCurrentBackground] = useState("")
   const [currentFont, setCurrentFont] = useState("")
   const [availableBackgrounds, setAvailableBackgrounds] = useState<string[]>([])
   const [backgroundIndex, setBackgroundIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
+  const [inputValue, setInputValue] = useState("") // Added state for input value
 
   useEffect(() => {
     const checkMobile = () => {
@@ -167,6 +169,10 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
     return starters[mode] || starters.friend
   }
 
+  const handlePromptClick = (prompt: string) => {
+    setInputValue(prompt)
+  }
+
   return (
     <div
       className="min-h-screen flex flex-col relative overflow-hidden"
@@ -222,16 +228,34 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
 
         <div className="w-full max-w-2xl mb-6 md:mb-8 px-4">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-1 shadow-2xl">
-            <input
-              type="text"
-              placeholder="What's on your mind today?"
-              className="w-full bg-transparent text-gray-900 dark:text-white placeholder-gray-600 dark:placeholder-white/60 px-4 md:px-6 py-3 md:py-4 rounded-xl outline-none text-base md:text-lg"
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                  onStartConversation(e.currentTarget.value.trim())
-                }
-              }}
-            />
+            <div className="flex items-center">
+              <input
+                type="text"
+                placeholder="What's on your mind today?"
+                value={inputValue} // Added controlled input value
+                onChange={(e) => setInputValue(e.target.value)} // Added onChange handler
+                className="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-600 dark:placeholder-white/60 px-4 md:px-6 py-3 md:py-4 rounded-xl outline-none text-base md:text-lg"
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && inputValue.trim()) {
+                    // Use inputValue state instead of e.currentTarget.value
+                    onStartConversation(inputValue.trim())
+                  }
+                }}
+              />
+              <Button
+                onClick={() => {
+                  if (inputValue.trim()) {
+                    // Use inputValue state instead of DOM query
+                    onStartConversation(inputValue.trim())
+                  }
+                }}
+                className="bg-transparent hover:bg-white/20 text-gray-900 dark:text-white p-2 mr-2 rounded-lg transition-all duration-300"
+                variant="ghost"
+                size="sm"
+              >
+                <Send className="h-4 w-4 md:h-5 md:w-5" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex justify-center mt-4">
@@ -255,7 +279,7 @@ export default function WelcomeScreen({ mode, onStartConversation, userGender, u
             {getConversationStarters().map((prompt, index) => (
               <div
                 key={index}
-                onClick={() => onStartConversation(prompt)}
+                onClick={() => handlePromptClick(prompt)} // Changed to populate input instead of auto-send
                 className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-gray-900 dark:text-white border border-white/20 rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
                 <span className="text-sm md:text-base font-medium">"{prompt}"</span>
