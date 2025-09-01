@@ -1,20 +1,19 @@
-import { Helmet } from "react-helmet"
-import { JournalView } from "../components/JournalView"
-import styles from "./journal.module.css"
+import type { Metadata } from "next"
+import { JournalView as JournalViewComponent } from "@/app/components/JournalView"
+
+export const metadata: Metadata = {
+  title: "My Journal | ValorMind",
+  description: "A private and personal space to write about your day, track your mood, and express yourself freely.",
+}
+
+export function JournalView() {
+  return (
+    <div className="min-h-screen bg-background">
+      <JournalViewComponent />
+    </div>
+  )
+}
 
 export default function JournalPage() {
-  return (
-    <>
-      <Helmet>
-        <title>My Journal | ValorMind</title>
-        <meta
-          name="description"
-          content="A private and personal space to write about your day, track your mood, and express yourself freely."
-        />
-      </Helmet>
-      <div className={styles.pageContainer}>
-        <JournalView />
-      </div>
-    </>
-  )
+  return <JournalView />
 }
