@@ -74,7 +74,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
             persona: selectedPersona,
           })
         }
-      }, 1500)
+      }, 800)
     }
   }, [step, onComplete, userName, selectedEmotion, selectedTheme, selectedPersona])
 
@@ -328,7 +328,20 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete }) => {
               <Check className="w-16 h-16 text-white" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">Welcome, {userName}!</h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300">Setting up your personalized experience...</p>
+            <p className="text-lg text-gray-600 dark:text-gray-300">
+              Setting up your personalized experience and taking you to your {selectedPersona} chat...
+            </p>
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+              <div
+                className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                style={{ animationDelay: "150ms" }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-pink-500 rounded-full animate-bounce"
+                style={{ animationDelay: "300ms" }}
+              ></div>
+            </div>
           </div>
         )
     }

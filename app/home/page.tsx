@@ -161,6 +161,9 @@ export default function HomePage() {
         case "records":
           router.push("/records")
           break
+        case "journal":
+          router.push("/journal") // Navigate to journal page instead of showing coming soon
+          break
         case "avatar":
           setComingSoonFeature("Avatar Therapy")
           setShowComingSoon(true)
@@ -168,11 +171,6 @@ export default function HomePage() {
           break
         case "vent":
           setComingSoonFeature("Vent Mode")
-          setShowComingSoon(true)
-          setNavigatingMode(null)
-          break
-        case "journal":
-          setComingSoonFeature("Journal")
           setShowComingSoon(true)
           setNavigatingMode(null)
           break
