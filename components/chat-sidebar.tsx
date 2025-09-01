@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Plus, MessageSquare, Trash2, Edit3, X, ChevronRight, ChevronLeft, ArrowLeft } from "lucide-react"
+import { Plus, MessageSquare, Trash2, Edit3, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase"
@@ -16,6 +16,7 @@ interface ChatSidebarProps {
   onNewChat: () => void
   isOpen: boolean
   onClose: () => void
+  collapsed?: boolean
   onUpdateSessionTitle?: (sessionId: string, title: string) => void
   hasBackgroundImage?: boolean
 }
@@ -27,6 +28,7 @@ export default function ChatSidebar({
   onNewChat,
   isOpen,
   onClose,
+  collapsed = true,
   onUpdateSessionTitle,
   hasBackgroundImage = false,
 }: ChatSidebarProps) {
@@ -34,12 +36,11 @@ export default function ChatSidebar({
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState("")
-  const [isCollapsed, setIsCollapsed] = useState(true)
   const supabase = createClient()
   const router = useRouter()
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 1024
-  const shouldBeExpanded = isMobile ? isOpen : !isCollapsed
+  const shouldBeExpanded = isMobile ? isOpen : !collapsed
 
   useEffect(() => {
     loadSessions()
@@ -197,16 +198,20 @@ export default function ChatSidebar({
 
   return (
     <>
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />}
+      {isOpen && isMobile && <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />}
 
       <div
-        className={`fixed top-0 left-0 h-full ${
+        className={`h-full ${
           hasBackgroundImage
             ? "bg-white/20 dark:bg-gray-900/20 backdrop-blur-md"
             : "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md"
-        } border-r border-gray-200 dark:border-gray-700 z-50 transform transition-all duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 lg:static lg:z-auto ${shouldBeExpanded ? "w-80" : "w-16"}`}
+        } border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ${
+          // Mobile: fixed positioning with slide animation
+          isMobile
+            ? `fixed top-0 left-0 z-50 transform ${isOpen ? "translate-x-0" : "-translate-x-full"} w-80`
+            : // Desktop: static positioning with width changes only
+              `relative ${shouldBeExpanded ? "w-80" : "w-16"}`
+        }`}
       >
         <div className="flex flex-col h-full">
           <div
@@ -214,63 +219,24 @@ export default function ChatSidebar({
               hasBackgroundImage ? "border-white/30 dark:border-gray-600/30" : "border-gray-200 dark:border-gray-700"
             }`}
           >
-            <div className="flex items-center justify-between mb-4">
-              {shouldBeExpanded && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => router.push("/home")}
-                    variant="ghost"
-                    size="sm"
-                    className={`${
-                      hasBackgroundImage
-                        ? "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-white/30 text-gray-700"
-                        : "bg-white/60 hover:bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-700"
-                    } rounded-lg p-2 shadow-sm`}
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {currentMode === "friend" ? "Friend Chats" : "Therapy Sessions"}
-                  </h2>
-                </div>
-              )}
-              {!shouldBeExpanded && (
-                <Button
-                  onClick={() => router.push("/home")}
-                  variant="ghost"
-                  size="sm"
-                  className={`${
-                    hasBackgroundImage
-                      ? "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-white/30 text-gray-700"
-                      : "bg-white/60 hover:bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-700"
-                  } rounded-lg p-2 shadow-sm mb-2`}
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-              )}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsCollapsed(!isCollapsed)}
-                  className={`hidden lg:flex text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 ${
-                    hasBackgroundImage
-                      ? "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-white/30"
-                      : "bg-white/60 hover:bg-white/80 backdrop-blur-sm border border-gray-200/50"
-                  } rounded-lg p-2 shadow-sm`}
-                >
-                  {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+            {/* Back button - now positioned above New Chat */}
+            <div className="mb-3">
+              <Button
+                onClick={() => router.push("/home")}
+                variant="ghost"
+                size="sm"
+                className={`${shouldBeExpanded ? "w-full justify-start" : "w-8 h-8 p-0"} ${
+                  hasBackgroundImage
+                    ? "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-white/30 text-gray-700"
+                    : "bg-white/60 hover:bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-700"
+                } rounded-lg shadow-sm`}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                {shouldBeExpanded && <span className="ml-2">Back to Home</span>}
+              </Button>
             </div>
+
+            {/* New Chat button */}
             <Button
               onClick={createNewSession}
               className={`${shouldBeExpanded ? "w-full" : "w-8 h-8 p-0"} bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white`}
@@ -293,79 +259,67 @@ export default function ChatSidebar({
                 ))}
               </div>
             ) : sessions.length === 0 ? (
-              <div className={`text-center py-8 ${shouldBeExpanded ? "" : "hidden"}`}>
-                <MessageSquare
-                  className={`w-12 h-12 mx-auto mb-3 ${hasBackgroundImage ? "text-white/60" : "text-gray-400"}`}
-                />
-                <p className={`text-sm ${hasBackgroundImage ? "text-white/80" : "text-gray-500 dark:text-gray-400"}`}>
-                  No {currentMode} chats yet. Start a new conversation!
-                </p>
-              </div>
+              shouldBeExpanded && (
+                <div className="text-center py-8">
+                  <MessageSquare
+                    className={`w-12 h-12 mx-auto mb-3 ${hasBackgroundImage ? "text-white/60" : "text-gray-400"}`}
+                  />
+                  <p className={`text-sm ${hasBackgroundImage ? "text-white/80" : "text-gray-500 dark:text-gray-400"}`}>
+                    No {currentMode} chats yet. Start a new conversation!
+                  </p>
+                </div>
+              )
             ) : (
-              <div className={`space-y-2 ${shouldBeExpanded ? "" : "hidden"}`}>
-                {sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className={`group relative rounded-lg border transition-all duration-200 cursor-pointer ${
-                      shouldBeExpanded ? "p-3" : "p-2"
-                    } ${
-                      currentSessionId === session.id
-                        ? hasBackgroundImage
-                          ? "bg-white/30 border-white/40"
-                          : "bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-700"
-                        : hasBackgroundImage
-                          ? "bg-white/10 border-white/20 hover:bg-white/20"
-                          : "bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    }`}
-                    onClick={() => {
-                      if (editingId !== session.id) {
-                        onSessionSelect(session.id)
-                        onClose()
-                      }
-                    }}
-                  >
-                    {editingId === session.id && shouldBeExpanded ? (
-                      <Input
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        onKeyDown={(e) => handleKeyPress(e, session.id)}
-                        onBlur={() => updateSessionTitle(session.id, editTitle)}
-                        className={`text-sm bg-transparent border-none p-0 h-auto focus:ring-0 ${
-                          hasBackgroundImage ? "text-white placeholder-white/60" : ""
-                        }`}
-                        autoFocus
-                      />
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          {shouldBeExpanded ? (
-                            <>
-                              <h3
-                                className={`text-sm font-medium truncate ${
-                                  hasBackgroundImage ? "text-white" : "text-gray-900 dark:text-white"
-                                }`}
-                              >
-                                {session.title}
-                              </h3>
-                              <p
-                                className={`text-xs mt-1 ${
-                                  hasBackgroundImage ? "text-white/70" : "text-gray-500 dark:text-gray-400"
-                                }`}
-                              >
-                                {formatTimestamp(session.updated_at)}
-                              </p>
-                            </>
-                          ) : (
-                            <div
-                              className={`text-xs truncate ${
-                                hasBackgroundImage ? "text-white/80" : "text-gray-600 dark:text-gray-400"
+              shouldBeExpanded && (
+                <div className="space-y-2">
+                  {sessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className={`group relative rounded-lg border transition-all duration-200 cursor-pointer p-3 ${
+                        currentSessionId === session.id
+                          ? hasBackgroundImage
+                            ? "bg-white/30 border-white/40"
+                            : "bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-700"
+                          : hasBackgroundImage
+                            ? "bg-white/10 border-white/20 hover:bg-white/20"
+                            : "bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      }`}
+                      onClick={() => {
+                        if (editingId !== session.id) {
+                          onSessionSelect(session.id)
+                          if (isMobile) onClose()
+                        }
+                      }}
+                    >
+                      {editingId === session.id ? (
+                        <Input
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          onKeyDown={(e) => handleKeyPress(e, session.id)}
+                          onBlur={() => updateSessionTitle(session.id, editTitle)}
+                          className={`text-sm bg-transparent border-none p-0 h-auto focus:ring-0 ${
+                            hasBackgroundImage ? "text-white placeholder-white/60" : ""
+                          }`}
+                          autoFocus
+                        />
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3
+                              className={`text-sm font-medium truncate ${
+                                hasBackgroundImage ? "text-white" : "text-gray-900 dark:text-white"
                               }`}
                             >
-                              {session.title.length > 15 ? session.title.substring(0, 15) + "..." : session.title}
-                            </div>
-                          )}
-                        </div>
-                        {shouldBeExpanded && (
+                              {session.title}
+                            </h3>
+                            <p
+                              className={`text-xs mt-1 ${
+                                hasBackgroundImage ? "text-white/70" : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              {formatTimestamp(session.updated_at)}
+                            </p>
+                          </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
                               variant="ghost"
@@ -398,12 +352,12 @@ export default function ChatSidebar({
                               <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
             )}
           </div>
         </div>

@@ -127,6 +127,14 @@ export default function HomePage() {
       } else {
         document.documentElement.classList.remove("dark")
       }
+
+      setTimeout(() => {
+        if (onboardingData.persona === "friend") {
+          router.push("/friend")
+        } else if (onboardingData.persona === "therapist") {
+          router.push("/therapist")
+        }
+      }, 500)
     } catch (error) {
       console.error("Error completing onboarding:", error)
     }

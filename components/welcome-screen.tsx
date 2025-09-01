@@ -170,7 +170,7 @@ export default function WelcomeScreen({ mode, onStartConversation, onBack, userG
   }
 
   const handlePromptClick = (prompt: string) => {
-    setInputValue(prompt)
+    onStartConversation(prompt)
   }
 
   return (
@@ -232,12 +232,11 @@ export default function WelcomeScreen({ mode, onStartConversation, onBack, userG
               <input
                 type="text"
                 placeholder="What's on your mind today?"
-                value={inputValue} // Added controlled input value
-                onChange={(e) => setInputValue(e.target.value)} // Added onChange handler
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
                 className="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-600 dark:placeholder-white/60 px-4 md:px-6 py-3 md:py-4 rounded-xl outline-none text-base md:text-lg"
                 onKeyPress={(e) => {
                   if (e.key === "Enter" && inputValue.trim()) {
-                    // Use inputValue state instead of e.currentTarget.value
                     onStartConversation(inputValue.trim())
                   }
                 }}
@@ -245,7 +244,6 @@ export default function WelcomeScreen({ mode, onStartConversation, onBack, userG
               <Button
                 onClick={() => {
                   if (inputValue.trim()) {
-                    // Use inputValue state instead of DOM query
                     onStartConversation(inputValue.trim())
                   }
                 }}
@@ -279,7 +277,7 @@ export default function WelcomeScreen({ mode, onStartConversation, onBack, userG
             {getConversationStarters().map((prompt, index) => (
               <div
                 key={index}
-                onClick={() => handlePromptClick(prompt)} // Changed to populate input instead of auto-send
+                onClick={() => handlePromptClick(prompt)}
                 className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-gray-900 dark:text-white border border-white/20 rounded-2xl p-3 md:p-4 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
                 <span className="text-sm md:text-base font-medium">"{prompt}"</span>

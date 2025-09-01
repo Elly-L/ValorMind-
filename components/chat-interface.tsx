@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type } from "lucide-react"
+import { Send, Menu, Palette, Paperclip, X, ImageIcon, Type, ChevronRight, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { performSafetyCheck } from "../lib/ai-personality"
@@ -136,7 +136,7 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
       }
     }
 
-    setInputValue(prompt)
+    await sendMessage(prompt)
   }
 
   const createNewSession = async (): Promise<boolean> => {
@@ -597,12 +597,6 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
       <div
         className={`flex-1 min-h-screen flex flex-col transition-all duration-300 overflow-hidden ${
           selectedBackgroundImage ? "relative z-10" : currentStyle.background
-        } ${
-          sidebarOpen && !window.matchMedia("(min-width: 1024px)").matches
-            ? "lg:ml-0"
-            : sidebarCollapsed
-              ? "lg:ml-16"
-              : "lg:ml-80"
         }`}
         style={
           selectedBackgroundImage
@@ -616,207 +610,233 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
             : {}
         }
       >
-        <div className="fixed top-0 left-0 right-0 z-20 bg-white/20 backdrop-blur-md border-b border-white/30 p-3 md:p-4">
-          <div className="max-w-full mx-auto flex items-center justify-between px-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSidebarOpen(true)}
-                className="text-gray-700 hover:bg-white/20 flex-shrink-0"
-              >
-                <Menu className="w-4 h-4" />
-              </Button>
-            </div>
+        <div
+          className={`fixed top-0 left-0 right-0 z-20 bg-white/20 backdrop-blur-md border-b border-white/30 transition-all duration-300 ${
+            sidebarCollapsed ? "lg:ml-16" : "lg:ml-80"
+          }`}
+        >
+          <div className="p-3 md:p-4">
+            <div className="max-w-full mx-auto flex items-center justify-between px-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    // Mobile: Open sidebar
+                    if (window.matchMedia("(max-width: 1023px)").matches) {
+                      setSidebarOpen(true)
+                    } else {
+                      // Desktop: Toggle sidebar collapsed state
+                      setSidebarCollapsed(!sidebarCollapsed)
+                    }
+                  }}
+                  className="text-gray-700 hover:bg-white/20 flex-shrink-0 lg:bg-gradient-to-r lg:from-pink-500 lg:to-purple-500 lg:text-white lg:hover:from-pink-600 lg:hover:to-purple-600"
+                  title={window.matchMedia("(max-width: 1023px)").matches ? "Open menu" : "Toggle sidebar"}
+                >
+                  {/* Mobile: Always show Menu icon */}
+                  <Menu className="w-4 h-4 lg:hidden" />
+                  {/* Desktop: Show expand/collapse icons */}
+                  {sidebarCollapsed ? (
+                    <ChevronRight className="w-4 h-4 hidden lg:block" />
+                  ) : (
+                    <ChevronLeft className="w-4 h-4 hidden lg:block" />
+                  )}
+                </Button>
+              </div>
 
-            <div className="flex items-center gap-2 min-w-0 flex-1 justify-center">
-              <h1 className={`text-lg md:text-xl font-semibold text-gray-800 ${getCurrentFontClass()} truncate`}>
-                {currentStyle.header}
-              </h1>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium border transition-all duration-200 flex-shrink-0 ${
-                  mode === "friend"
-                    ? "bg-blue-100/80 text-blue-700 border-blue-200/60"
+              <div className="flex items-center gap-2 min-w-0 flex-1 justify-center">
+                <h1 className={`text-lg md:text-xl font-semibold text-gray-800 ${getCurrentFontClass()} truncate`}>
+                  {currentStyle.header}
+                </h1>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium border transition-all duration-200 flex-shrink-0 ${
+                    mode === "friend"
+                      ? "bg-blue-100/80 text-blue-700 border-blue-200/60"
+                      : mode === "therapist" || mode === "avatar-therapy"
+                        ? "bg-purple-100/80 text-purple-700 border-purple-200/60"
+                        : mode === "vent"
+                          ? "bg-orange-100/80 text-orange-700 border-orange-200/60"
+                          : mode === "journal"
+                            ? "bg-green-100/80 text-green-700 border-green-200/60"
+                            : "bg-gray-100/80 text-gray-700 border-gray-200/60"
+                  }`}
+                >
+                  {mode === "friend"
+                    ? "Friend"
                     : mode === "therapist" || mode === "avatar-therapy"
-                      ? "bg-purple-100/80 text-purple-700 border-purple-200/60"
+                      ? "Therapy"
                       : mode === "vent"
-                        ? "bg-orange-100/80 text-orange-700 border-orange-200/60"
+                        ? "Vent"
                         : mode === "journal"
-                          ? "bg-green-100/80 text-green-700 border-green-200/60"
-                          : "bg-gray-100/80 text-gray-700 border-gray-200/60"
-                }`}
-              >
-                {mode === "friend"
-                  ? "Friend"
-                  : mode === "therapist" || mode === "avatar-therapy"
-                    ? "Therapy"
-                    : mode === "vent"
-                      ? "Vent"
-                      : mode === "journal"
-                        ? "Journal"
-                        : mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </span>
-            </div>
+                          ? "Journal"
+                          : mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </span>
+              </div>
 
-            <div className="flex items-center gap-1 md:gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowFontMenu(!showFontMenu)
-                  setShowMenu(false)
-                }}
-                className="text-gray-700 hover:bg-white/20 p-1.5 md:p-2"
-                title="Change font style"
-              >
-                <Type className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowMenu(!showMenu)
-                  setShowFontMenu(false)
-                }}
-                className="text-gray-700 hover:bg-white/20 p-1.5 md:p-2"
-                title="Change theme"
-              >
-                <Palette className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1 md:gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowFontMenu(!showFontMenu)
+                    setShowMenu(false)
+                  }}
+                  className="text-gray-700 hover:bg-white/20 p-1.5 md:p-2"
+                  title="Change font style"
+                >
+                  <Type className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowMenu(!showMenu)
+                    setShowFontMenu(false)
+                  }}
+                  className="text-gray-700 hover:bg-white/20 p-1.5 md:p-2"
+                  title="Change theme"
+                >
+                  <Palette className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
           {showFontMenu && (
-            <div className="max-w-2xl mx-auto mt-4 p-4 bg-white/90 backdrop-blur-md rounded-xl border border-white/30 relative">
-              <Button
-                onClick={() => setShowFontMenu(false)}
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 hover:bg-white/20 rounded-full p-1"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+            <div className="px-3 md:px-4 pb-4">
+              <div className="max-w-2xl mx-auto p-4 bg-white/90 backdrop-blur-md rounded-xl border border-white/30 relative">
+                <Button
+                  onClick={() => setShowFontMenu(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 hover:bg-white/20 rounded-full p-1"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
 
-              <div className="space-y-2" data-tutorial="font-selector">
-                <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <Type className="w-4 h-4 mr-2" />
-                  Font Style
-                </h3>
-                {Object.entries(fontOptions).map(([key, font]) => (
-                  <button
-                    key={key}
-                    onClick={() => handleFontSelect(key)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-all hover:bg-white/60 ${
-                      selectedFont === key ? "bg-purple-500 text-white" : "bg-white/40 text-gray-800"
-                    } ${font.class}`}
-                  >
-                    {font.name}
-                  </button>
-                ))}
+                <div className="space-y-2" data-tutorial="font-selector">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <Type className="w-4 h-4 mr-2" />
+                    Font Style
+                  </h3>
+                  {Object.entries(fontOptions).map(([key, font]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleFontSelect(key)}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-all hover:bg-white/60 ${
+                        selectedFont === key ? "bg-purple-500 text-white" : "bg-white/40 text-gray-800"
+                      } ${font.class}`}
+                    >
+                      {font.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {showMenu && (
-            <div className="max-w-2xl mx-auto mt-4 p-4 bg-white/30 backdrop-blur-md rounded-xl border border-white/30 relative">
-              <Button
-                onClick={() => setShowMenu(false)}
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 hover:bg-white/20 rounded-full p-1"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+            <div className="px-3 md:px-4 pb-4">
+              <div className="max-w-2xl mx-auto p-4 bg-white/30 backdrop-blur-md rounded-xl border border-white/30 relative">
+                <Button
+                  onClick={() => setShowMenu(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 hover:bg-white/20 rounded-full p-1"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div data-tutorial="background-themes">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Background Theme</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {Object.entries(gradientOptions).map(([key, option]) => (
-                      <button
-                        key={key}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div data-tutorial="background-themes">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Background Theme</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {Object.entries(gradientOptions).map(([key, option]) => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setSelectedGradient(key)
+                            setSelectedBackgroundImage(null)
+                            setShowMenu(false)
+                          }}
+                          className={`w-8 h-8 rounded-full ${option.color} border-2 transition-all hover:scale-110 ${
+                            selectedGradient === key && !selectedBackgroundImage
+                              ? "border-gray-800 shadow-lg"
+                              : "border-white/50"
+                          }`}
+                          title={key.charAt(0).toUpperCase() + key.slice(1)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div data-tutorial="background-images">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Background Image</label>
+                    <Button
+                      onClick={() => setShowImageModal(true)}
+                      variant="outline"
+                      size="sm"
+                      className={`bg-white/60 hover:bg-white/80 text-gray-700 border-2 transition-all ${
+                        selectedBackgroundImage ? "border-pink-500 shadow-lg" : "border-white/50"
+                      }`}
+                    >
+                      <ImageIcon className="w-4 h-4 mr-2" />
+                      Choose Image
+                    </Button>
+                    {selectedBackgroundImage && (
+                      <Button
                         onClick={() => {
-                          setSelectedGradient(key)
                           setSelectedBackgroundImage(null)
                           setShowMenu(false)
                         }}
-                        className={`w-8 h-8 rounded-full ${option.color} border-2 transition-all hover:scale-110 ${
-                          selectedGradient === key && !selectedBackgroundImage
-                            ? "border-gray-800 shadow-lg"
-                            : "border-white/50"
-                        }`}
-                        title={key.charAt(0).toUpperCase() + key.slice(1)}
-                      />
-                    ))}
+                        variant="ghost"
+                        size="sm"
+                        className="ml-2 text-gray-600 hover:text-red-500"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div data-tutorial="message-bubbles">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Message Bubble Color</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {Object.entries(userMessageBgOptions).map(([key, option]) => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setUserMessageBg(key)
+                            setShowMenu(false)
+                          }}
+                          className={`w-8 h-8 rounded-full ${option.color} border-2 transition-all hover:scale-110 ${
+                            userMessageBg === key ? "border-gray-800 shadow-lg" : "border-white/50"
+                          }`}
+                          title={key === "default" ? "Pink-Purple" : key.charAt(0).toUpperCase() + key.slice(1)}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div data-tutorial="background-images">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Background Image</label>
+                <div className="flex justify-center mt-4">
                   <Button
-                    onClick={() => setShowImageModal(true)}
+                    onClick={() => setShowMenu(false)}
                     variant="outline"
                     size="sm"
-                    className={`bg-white/60 hover:bg-white/80 text-gray-700 border-2 transition-all ${
-                      selectedBackgroundImage ? "border-pink-500 shadow-lg" : "border-white/50"
-                    }`}
+                    className="bg-white/60 hover:bg-white/80 text-gray-700 border border-white/50 px-6"
                   >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    Choose Image
+                    Close
                   </Button>
-                  {selectedBackgroundImage && (
-                    <Button
-                      onClick={() => {
-                        setSelectedBackgroundImage(null)
-                        setShowMenu(false)
-                      }}
-                      variant="ghost"
-                      size="sm"
-                      className="ml-2 text-gray-600 hover:text-red-500"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
                 </div>
-
-                <div data-tutorial="message-bubbles">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Message Bubble Color</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {Object.entries(userMessageBgOptions).map(([key, option]) => (
-                      <button
-                        key={key}
-                        onClick={() => {
-                          setUserMessageBg(key)
-                          setShowMenu(false)
-                        }}
-                        className={`w-8 h-8 rounded-full ${option.color} border-2 transition-all hover:scale-110 ${
-                          userMessageBg === key ? "border-gray-800 shadow-lg" : "border-white/50"
-                        }`}
-                        title={key === "default" ? "Pink-Purple" : key.charAt(0).toUpperCase() + key.slice(1)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-center mt-4">
-                <Button
-                  onClick={() => setShowMenu(false)}
-                  variant="outline"
-                  size="sm"
-                  className="bg-white/60 hover:bg-white/80 text-gray-700 border border-white/50 px-6"
-                >
-                  Close
-                </Button>
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto pt-20 md:pt-24 pb-24 px-2 md:px-4 relative">
-          <div
-            className={`mx-auto space-y-4 transition-all duration-300 max-w-full ${sidebarCollapsed ? "md:max-w-4xl" : "md:max-w-2xl"}`}
-          >
+        <div
+          className={`flex-1 overflow-y-auto pb-24 px-2 md:px-4 relative ${showMenu || showFontMenu ? "pt-80" : "pt-20 md:pt-24"}`}
+        >
+          <div className={`mx-auto space-y-4 transition-all duration-300 max-w-full`}>
             {messages.map((message) => (
               <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div
@@ -884,11 +904,11 @@ export default function ChatInterface({ mode, userName }: ChatInterfaceProps) {
         </div>
 
         <div
-          className={`fixed bottom-0 left-0 right-0 p-3 md:p-4 bg-white/20 backdrop-blur-md border-t border-white/30 z-20`}
+          className={`fixed bottom-0 left-0 right-0 p-3 md:p-4 bg-white/20 backdrop-blur-md border-t border-white/30 z-20 transition-all duration-300 ${
+            sidebarCollapsed ? "lg:ml-16" : "lg:ml-80"
+          }`}
         >
-          <div
-            className={`mx-auto max-w-full transition-all duration-300 ${sidebarCollapsed ? "md:max-w-4xl" : "md:max-w-2xl"}`}
-          >
+          <div className={`mx-auto max-w-full transition-all duration-300`}>
             {attachments.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
                 {attachments.map((file, index) => (
